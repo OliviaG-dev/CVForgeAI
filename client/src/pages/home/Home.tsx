@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import './Home.css';
 import {
   SparklesIcon,
@@ -36,9 +37,8 @@ const features = [
 ];
 
 export default function Home() {
-  const handleGetStarted = () => {
-    // TODO: navigation vers l'éditeur / formulaire CV
-  };
+  const navigate = useNavigate();
+  const handleGetStarted = () => navigate('/create');
 
   return (
     <main className="home">
