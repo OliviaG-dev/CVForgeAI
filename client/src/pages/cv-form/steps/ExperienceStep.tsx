@@ -39,7 +39,7 @@ export default function ExperienceStep({ data, onChange }: Props) {
       </div>
 
       {data.length === 0 && (
-        <p className="step__empty">Aucune expérience ajoutée. Cliquez sur "+ Ajouter" pour commencer.</p>
+        <p className="step__empty">Aucune expérience ajoutée.<br/>Cliquez sur &laquo; + Ajouter &raquo; pour commencer.</p>
       )}
 
       {data.map((exp, i) => (

@@ -38,7 +38,7 @@ export default function EducationStep({ data, onChange }: Props) {
       </div>
 
       {data.length === 0 && (
-        <p className="step__empty">Aucune formation ajoutée. Cliquez sur "+ Ajouter" pour commencer.</p>
+        <p className="step__empty">Aucune formation ajoutée.<br/>Cliquez sur &laquo; + Ajouter &raquo; pour commencer.</p>
       )}
 
       {data.map((edu, i) => (

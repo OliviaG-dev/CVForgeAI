@@ -1,63 +1,69 @@
-import { useNavigate } from 'react-router-dom';
-import './Home.css';
+import { useNavigate } from "react-router-dom";
+import "./Home.css";
 import {
   SparklesIcon,
   EyeIcon,
   PencilDocIcon,
   TargetIcon,
   DocumentPdfIcon,
-} from '../../components/icons';
+} from "../../components/icons";
 
 const features = [
   {
     Icon: SparklesIcon,
-    title: 'Génération automatique',
-    description: 'Générez un CV complet à partir de vos expériences, compétences et formation en quelques secondes.',
+    title: "Génération automatique",
+    description:
+      "Générez un CV complet à partir de vos expériences, compétences et formation en quelques secondes.",
   },
   {
     Icon: EyeIcon,
-    title: 'Prévisualisation en temps réel',
-    description: 'Visualisez votre CV au fur et à mesure de la saisie et des modifications.',
+    title: "Prévisualisation en temps réel",
+    description:
+      "Visualisez votre CV au fur et à mesure de la saisie et des modifications.",
   },
   {
     Icon: PencilDocIcon,
-    title: 'Amélioration des descriptions',
-    description: 'Reformulation intelligente de vos expériences professionnelles pour les rendre plus percutantes.',
+    title: "Amélioration des descriptions",
+    description:
+      "Reformulation intelligente de vos expériences professionnelles pour les rendre plus percutantes.",
   },
   {
     Icon: TargetIcon,
-    title: 'Adaptation à l\'offre',
-    description: 'Adaptez votre CV à une offre d\'emploi spécifique pour maximiser vos chances.',
+    title: "Adaptation à l'offre",
+    description:
+      "Adaptez votre CV à une offre d'emploi spécifique pour maximiser vos chances.",
   },
   {
     Icon: DocumentPdfIcon,
-    title: 'Export PDF',
-    description: 'Exportez votre CV dans un format propre et professionnel, prêt à envoyer aux recruteurs.',
+    title: "Export PDF",
+    description:
+      "Exportez votre CV dans un format propre et professionnel, prêt à envoyer aux recruteurs.",
   },
 ];
 
 export default function Home() {
   const navigate = useNavigate();
-  const handleGetStarted = () => navigate('/create');
+  const handleGetStarted = () => navigate("/create");
 
   return (
     <main className="home">
       <section className="home__hero">
-        <img
-          src="/title.png"
-          alt="CVForge AI"
-          className="home__title-image"
-        />
+        <img src="/title.png" alt="CVForge AI" className="home__title-image" />
         <p className="home__subtitle">
-          Générez automatiquement un CV professionnel grâce à l'intelligence artificielle.
-          Saisissez vos informations, visualisez en temps réel et exportez un CV optimisé pour les recruteurs et les systèmes ATS.
+          Générez automatiquement un CV professionnel grâce à l'intelligence
+          artificielle. Saisissez vos informations, visualisez en temps réel et
+          exportez un CV optimisé pour les recruteurs et les systèmes ATS.
         </p>
         <div className="home__cta-wrapper">
           <span className="home__cta-arrows home__cta-arrows--left">
             <span className="home__cta-arrow" />
             <span className="home__cta-arrow" />
           </span>
-          <button type="button" className="home__cta" onClick={handleGetStarted}>
+          <button
+            type="button"
+            className="home__cta"
+            onClick={handleGetStarted}
+          >
             Créer mon CV
           </button>
           <span className="home__cta-arrows home__cta-arrows--right">
@@ -84,7 +90,6 @@ export default function Home() {
           })}
         </ul>
       </section>
-
     </main>
   );
 }

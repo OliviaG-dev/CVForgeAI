@@ -2,6 +2,7 @@
 
 .home {
   height: 100vh;
+  height: 100dvh;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -77,13 +78,23 @@
 }
 
 @keyframes nudge-left {
-  0%, 100% { transform: rotate(-135deg) translateX(0); }
-  50% { transform: rotate(-135deg) translateX(3px); }
+  0%,
+  100% {
+    transform: rotate(-135deg) translateX(0);
+  }
+  50% {
+    transform: rotate(-135deg) translateX(3px);
+  }
 }
 
 @keyframes nudge-right {
-  0%, 100% { transform: rotate(45deg) translateX(0); }
-  50% { transform: rotate(45deg) translateX(3px); }
+  0%,
+  100% {
+    transform: rotate(45deg) translateX(0);
+  }
+  50% {
+    transform: rotate(45deg) translateX(3px);
+  }
 }
 
 .home__cta {
@@ -100,7 +111,12 @@
   cursor: pointer;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  transition: color 0.4s ease, background 0.4s ease, border-color 0.4s ease, letter-spacing 0.4s ease, padding 0.4s ease;
+  transition:
+    color 0.4s ease,
+    background 0.4s ease,
+    border-color 0.4s ease,
+    letter-spacing 0.4s ease,
+    padding 0.4s ease;
 }
 
 .home__cta:hover {
@@ -122,6 +138,9 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .home__section-title {
@@ -152,7 +171,10 @@
   border-radius: 14px;
   padding: 1.25rem 1rem;
   text-align: center;
-  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s;
 }
 
 .home__feature:hover {
@@ -200,13 +222,10 @@
 
 @media (max-width: 600px) {
   .home {
-    height: auto;
-    min-height: 100vh;
-    overflow: auto;
+    padding: 1.25rem 1.25rem 1rem;
   }
 
   .home__feature {
     width: 100%;
   }
 }
-

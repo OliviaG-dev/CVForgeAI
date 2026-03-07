@@ -88,9 +88,13 @@ export default function CVForm() {
     <main className="cvform">
       <header className="cvform__header">
         <button type="button" className="cvform__back" onClick={() => navigate('/')}>
-          ← Accueil
+          <span className="cvform__back-arrow">&#8592;</span>
+          Accueil
         </button>
-        <h1 className="cvform__title">Créer mon CV</h1>
+        <div className="cvform__header-center">
+          <h1 className="cvform__title">Créer mon CV</h1>
+          <p className="cvform__header-hint">Étape {currentStep + 1} sur {STEPS.length}</p>
+        </div>
       </header>
 
       <nav className="cvform__stepper">
@@ -101,13 +105,19 @@ export default function CVForm() {
             className={`cvform__step ${i === currentStep ? 'cvform__step--active' : ''} ${i < currentStep ? 'cvform__step--done' : ''}`}
             onClick={() => setCurrentStep(i)}
           >
-            <span className="cvform__step-number">{i < currentStep ? '✓' : i + 1}</span>
+            <span className="cvform__step-indicator">
+              {i < currentStep ? (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              ) : (
+                <span className="cvform__step-dot" />
+              )}
+            </span>
             <span className="cvform__step-label">{step.label}</span>
           </button>
         ))}
       </nav>
 
-      <div className="cvform__body">
+      <div className="cvform__body" key={currentStep}>
         {renderStep()}
       </div>
 
@@ -118,15 +128,17 @@ export default function CVForm() {
           onClick={prev}
           disabled={currentStep === 0}
         >
+          <span className="cvform__btn-arrow">&#8592;</span>
           Précédent
         </button>
         {isLast ? (
           <button
             type="button"
-            className="cvform__btn cvform__btn--primary"
+            className="cvform__btn cvform__btn--primary cvform__btn--generate"
             onClick={handleSubmit}
           >
             Générer mon CV
+            <span className="cvform__btn-icon">&#10024;</span>
           </button>
         ) : (
           <button
@@ -135,6 +147,7 @@ export default function CVForm() {
             onClick={next}
           >
             Suivant
+            <span className="cvform__btn-arrow">&#8594;</span>
           </button>
         )}
       </footer>
