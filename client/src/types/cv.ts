@@ -2,6 +2,7 @@ export interface PersonalInfo {
   firstName: string;
   lastName: string;
   title: string;
+  summary: string;
   email: string;
   phone: string;
   city: string;
@@ -19,6 +20,7 @@ export interface Experience {
   endDate: string;
   current: boolean;
   description: string;
+  projectLink: string;
 }
 
 export interface Education {
@@ -44,6 +46,8 @@ export interface Certification {
   date: string;
 }
 
+export type AccentColor = 'blue' | 'green' | 'orange' | 'red' | 'pink' | 'violet' | 'black' | 'teal';
+
 export interface CVData {
   personalInfo: PersonalInfo;
   experiences: Experience[];
@@ -53,6 +57,7 @@ export interface CVData {
   languages: Language[];
   certifications: Certification[];
   interests: string[];
+  accentColor: AccentColor;
 }
 
 export const emptyCVData: CVData = {
@@ -60,6 +65,7 @@ export const emptyCVData: CVData = {
     firstName: '',
     lastName: '',
     title: '',
+    summary: '',
     email: '',
     phone: '',
     city: '',
@@ -74,4 +80,5 @@ export const emptyCVData: CVData = {
   languages: [],
   certifications: [],
   interests: [],
+  accentColor: 'blue',
 };

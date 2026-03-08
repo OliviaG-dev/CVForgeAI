@@ -49,6 +49,17 @@ export default function PersonalInfoStep({ data, onChange }: Props) {
           />
         </label>
 
+        <label className="step__field">
+          <span className="step__label">Résumé / Présentation</span>
+          <textarea
+            className="step__textarea"
+            value={data.summary}
+            onChange={(e) => update('summary', e.target.value)}
+            placeholder="Présentez-vous en quelques lignes : votre profil, votre disponibilité, ce que vous recherchez..."
+            rows={3}
+          />
+        </label>
+
         <div className="step__row">
           <label className="step__field">
             <span className="step__label">Email *</span>

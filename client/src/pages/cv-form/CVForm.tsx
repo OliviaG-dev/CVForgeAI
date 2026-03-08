@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { CVData, PersonalInfo, Experience, Education, Language, Certification } from '../../types/cv';
+import type { CVData, PersonalInfo, Experience, Education, Language, Certification, AccentColor } from '../../types/cv';
 import { emptyCVData } from '../../types/cv';
 import PersonalInfoStep from './steps/PersonalInfoStep.js';
 import ExperienceStep from './steps/ExperienceStep.js';
@@ -17,10 +17,13 @@ const STEPS = [
   { label: 'Extras', key: 'extras' },
 ] as const;
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 export default function CVForm() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState<CVData>(emptyCVData);
+  const [generating, setGenerating] = useState(false);
 
   const updateData = <K extends keyof CVData>(key: K, value: CVData[K]) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -29,9 +32,29 @@ export default function CVForm() {
   const next = () => setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
   const prev = () => setCurrentStep((s) => Math.max(s - 1, 0));
 
-  const handleSubmit = () => {
-    console.log('CV Data:', data);
-    // TODO: envoyer au serveur pour génération IA
+  const handleSubmit = async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch(`${API_URL}/api/cv/pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) throw new Error('Erreur serveur');
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CV-${data.personalInfo.firstName}-${data.personalInfo.lastName}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Erreur génération PDF:', err);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const renderStep = () => {
@@ -72,9 +95,11 @@ export default function CVForm() {
             languages={data.languages}
             certifications={data.certifications}
             interests={data.interests}
+            accentColor={data.accentColor}
             onChangeLanguages={(v: Language[]) => updateData('languages', v)}
             onChangeCertifications={(v: Certification[]) => updateData('certifications', v)}
             onChangeInterests={(v: string[]) => updateData('interests', v)}
+            onChangeAccentColor={(v: AccentColor) => updateData('accentColor', v)}
           />
         );
       default:
@@ -136,9 +161,10 @@ export default function CVForm() {
             type="button"
             className="cvform__btn cvform__btn--primary cvform__btn--generate"
             onClick={handleSubmit}
+            disabled={generating}
           >
-            Générer mon CV
-            <span className="cvform__btn-icon">&#10024;</span>
+            {generating ? 'Génération en cours...' : 'Générer mon CV'}
+            {!generating && <span className="cvform__btn-icon">&#10024;</span>}
           </button>
         ) : (
           <button

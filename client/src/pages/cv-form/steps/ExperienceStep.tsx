@@ -18,6 +18,7 @@ const emptyExperience: () => Experience = () => ({
   endDate: '',
   current: false,
   description: '',
+  projectLink: '',
 });
 
 export default function ExperienceStep({ data, onChange }: Props) {
@@ -123,6 +124,17 @@ export default function ExperienceStep({ data, onChange }: Props) {
               onChange={(e) => update(exp.id, 'description', e.target.value)}
               placeholder="Décrivez vos missions et réalisations principales..."
               rows={4}
+            />
+          </label>
+
+          <label className="step__field">
+            <span className="step__label">Lien vers le projet (optionnel)</span>
+            <input
+              type="url"
+              className="step__input"
+              value={exp.projectLink}
+              onChange={(e) => update(exp.id, 'projectLink', e.target.value)}
+              placeholder="https://mon-projet.com"
             />
           </label>
         </div>

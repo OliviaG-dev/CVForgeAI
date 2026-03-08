@@ -12,7 +12,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "openai": "^4.78.1"
+    "openai": "^4.78.1",
+    "puppeteer": "^24.38.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

@@ -1,8 +1,17 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openai: OpenAI | null = null;
+
+function getClient(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY manquante. Ajoutez-la dans server/.env');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 interface CVInput {
   experience: string;
@@ -14,7 +23,7 @@ interface CVInput {
 export async function generateCV(input: CVInput): Promise<string> {
   const lang = input.language || 'français';
 
-  const response = await openai.chat.completions.create({
+  const response = await getClient().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       {
@@ -33,7 +42,7 @@ export async function generateCV(input: CVInput): Promise<string> {
 }
 
 export async function improveDescription(description: string): Promise<string> {
-  const response = await openai.chat.completions.create({
+  const response = await getClient().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       {

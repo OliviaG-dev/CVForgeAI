@@ -110,7 +110,7 @@
 }
 
 .cvform__step::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: 11px;
@@ -131,7 +131,7 @@
 }
 
 .cvform__step--active::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 20%;
@@ -293,14 +293,22 @@
 }
 
 .cvform__btn--primary {
-  background: linear-gradient(135deg, rgba(100, 108, 255, 0.2), rgba(129, 140, 248, 0.15));
+  background: linear-gradient(
+    135deg,
+    rgba(100, 108, 255, 0.2),
+    rgba(129, 140, 248, 0.15)
+  );
   border: 1px solid rgba(100, 108, 255, 0.3);
   color: #c7d2fe;
   backdrop-filter: blur(8px);
 }
 
 .cvform__btn--primary:hover {
-  background: linear-gradient(135deg, rgba(100, 108, 255, 0.35), rgba(129, 140, 248, 0.25));
+  background: linear-gradient(
+    135deg,
+    rgba(100, 108, 255, 0.35),
+    rgba(129, 140, 248, 0.25)
+  );
   border-color: rgba(100, 108, 255, 0.5);
   color: #fff;
   box-shadow: 0 4px 20px rgba(100, 108, 255, 0.2);
@@ -425,7 +433,9 @@
   outline: none;
   border-color: rgba(100, 108, 255, 0.5);
   background: rgba(100, 108, 255, 0.06);
-  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.1), 0 0 16px rgba(100, 108, 255, 0.08);
+  box-shadow:
+    0 0 0 3px rgba(100, 108, 255, 0.1),
+    0 0 16px rgba(100, 108, 255, 0.08);
 }
 
 .step__input::placeholder,
@@ -495,13 +505,18 @@
 }
 
 .step__card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(100, 108, 255, 0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(100, 108, 255, 0.2),
+    transparent
+  );
   border-radius: 14px 14px 0 0;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -568,7 +583,11 @@
 /* ─── Buttons ─── */
 
 .step__add-btn {
-  background: linear-gradient(135deg, rgba(100, 108, 255, 0.12), rgba(129, 140, 248, 0.08));
+  background: linear-gradient(
+    135deg,
+    rgba(100, 108, 255, 0.12),
+    rgba(129, 140, 248, 0.08)
+  );
   border: 1px solid rgba(100, 108, 255, 0.25);
   color: #a5b4fc;
   padding: 0.4rem 1rem;
@@ -581,7 +600,11 @@
 }
 
 .step__add-btn:hover {
-  background: linear-gradient(135deg, rgba(100, 108, 255, 0.2), rgba(129, 140, 248, 0.15));
+  background: linear-gradient(
+    135deg,
+    rgba(100, 108, 255, 0.2),
+    rgba(129, 140, 248, 0.15)
+  );
   border-color: rgba(100, 108, 255, 0.4);
   color: #fff;
   box-shadow: 0 2px 12px rgba(100, 108, 255, 0.15);
@@ -630,13 +653,18 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+  margin-bottom: 0.6rem;
 }
 
 .step__tag {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: linear-gradient(135deg, rgba(100, 108, 255, 0.12), rgba(167, 139, 250, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(100, 108, 255, 0.12),
+    rgba(167, 139, 250, 0.1)
+  );
   border: 1px solid rgba(100, 108, 255, 0.2);
   border-radius: 999px;
   padding: 0.3rem 0.7rem;
@@ -658,7 +686,11 @@
 }
 
 .step__tag:hover {
-  background: linear-gradient(135deg, rgba(100, 108, 255, 0.2), rgba(167, 139, 250, 0.15));
+  background: linear-gradient(
+    135deg,
+    rgba(100, 108, 255, 0.2),
+    rgba(167, 139, 250, 0.15)
+  );
   border-color: rgba(100, 108, 255, 0.35);
 }
 
@@ -682,6 +714,62 @@
 .step__tag-remove:hover {
   color: #f87171;
   background: rgba(248, 113, 113, 0.15);
+}
+
+/* ─── Color picker ─── */
+
+.step__color-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.step__color-swatch {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.step__color-swatch:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--swatch-color);
+}
+
+.step__color-swatch--active {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--swatch-color);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.04), 0 0 12px color-mix(in srgb, var(--swatch-color) 30%, transparent);
+}
+
+.step__color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--swatch-color);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.step__color-swatch--active .step__color-dot {
+  transform: scale(1.15);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--swatch-color) 50%, transparent);
+}
+
+.step__color-name {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+}
+
+.step__color-swatch--active .step__color-name {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* ─── Responsive ─── */

@@ -1,13 +1,26 @@
 import { useState } from 'react';
-import type { Language, Certification } from '../../../types/cv';
+import type { Language, Certification, AccentColor } from '../../../types/cv';
+
+const ACCENT_COLORS: { value: AccentColor; label: string; hex: string }[] = [
+  { value: 'blue',   label: 'Bleu',   hex: '#2563eb' },
+  { value: 'teal',   label: 'Sarcelle', hex: '#0d9488' },
+  { value: 'green',  label: 'Vert',   hex: '#16a34a' },
+  { value: 'orange', label: 'Orange', hex: '#ea580c' },
+  { value: 'red',    label: 'Rouge',  hex: '#dc2626' },
+  { value: 'pink',   label: 'Rose',   hex: '#db2777' },
+  { value: 'violet', label: 'Violet', hex: '#7c3aed' },
+  { value: 'black',  label: 'Noir',   hex: '#1f2937' },
+];
 
 interface Props {
   languages: Language[];
   certifications: Certification[];
   interests: string[];
+  accentColor: AccentColor;
   onChangeLanguages: (data: Language[]) => void;
   onChangeCertifications: (data: Certification[]) => void;
   onChangeInterests: (data: string[]) => void;
+  onChangeAccentColor: (color: AccentColor) => void;
 }
 
 function generateId() {
@@ -20,9 +33,11 @@ export default function ExtrasStep({
   languages,
   certifications,
   interests,
+  accentColor,
   onChangeLanguages,
   onChangeCertifications,
   onChangeInterests,
+  onChangeAccentColor,
 }: Props) {
   const [interestInput, setInterestInput] = useState('');
 
@@ -177,6 +192,24 @@ export default function ExtrasStep({
         onBlur={addInterest}
         placeholder="Sport, Voyages, Bénévolat..."
       />
+
+      {/* Couleur d'accent */}
+      <h2 className="step__title step__section-gap">Couleur du CV</h2>
+      <div className="step__color-grid">
+        {ACCENT_COLORS.map((c) => (
+          <button
+            key={c.value}
+            type="button"
+            className={`step__color-swatch ${accentColor === c.value ? 'step__color-swatch--active' : ''}`}
+            style={{ '--swatch-color': c.hex } as React.CSSProperties}
+            onClick={() => onChangeAccentColor(c.value)}
+            title={c.label}
+          >
+            <span className="step__color-dot" />
+            <span className="step__color-name">{c.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
