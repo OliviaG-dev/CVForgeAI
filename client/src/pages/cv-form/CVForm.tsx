@@ -26,6 +26,7 @@ export default function CVForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState<CVData>(emptyCVData);
   const [generating, setGenerating] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
 
   const updateData = <K extends keyof CVData>(key: K, value: CVData[K]) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -87,6 +88,25 @@ export default function CVForm() {
 
   const next = () => setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
   const prev = () => setCurrentStep((s) => Math.max(s - 1, 0));
+
+  const handlePreview = async () => {
+    setPreviewing(true);
+    try {
+      const res = await fetch(`${API_URL}/api/cv/pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Erreur serveur');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (err) {
+      console.error('Erreur aperçu PDF:', err);
+    } finally {
+      setPreviewing(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setGenerating(true);
@@ -222,6 +242,15 @@ export default function CVForm() {
         >
           <span className="cvform__btn-arrow">&#8592;</span>
           Précédent
+        </button>
+        <button
+          type="button"
+          className="cvform__btn cvform__btn--preview"
+          onClick={handlePreview}
+          disabled={previewing}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          {previewing ? 'Chargement...' : 'Aperçu'}
         </button>
         {isLast ? (
           <button

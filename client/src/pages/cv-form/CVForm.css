@@ -319,6 +319,31 @@
   transform: translateX(3px);
 }
 
+.cvform__btn--preview {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.55rem 1.1rem;
+  font-size: 0.82rem;
+}
+
+.cvform__btn--preview:hover:not(:disabled) {
+  background: rgba(100, 108, 255, 0.1);
+  border-color: rgba(100, 108, 255, 0.3);
+  color: #c7d2fe;
+  box-shadow: 0 2px 12px rgba(100, 108, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.cvform__btn--preview:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.cvform__btn--preview svg {
+  flex-shrink: 0;
+}
+
 .cvform__btn--generate {
   background: linear-gradient(135deg, #646cff, #818cf8);
   border: none;
@@ -609,6 +634,14 @@
   color: #fff;
   box-shadow: 0 2px 12px rgba(100, 108, 255, 0.15);
   transform: translateY(-1px);
+}
+
+.step__add-btn--bottom {
+  width: 100%;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  margin-top: 0.25rem;
+  border-style: dashed;
 }
 
 .step__remove-btn {

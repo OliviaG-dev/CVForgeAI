@@ -214,6 +214,12 @@ export default function EducationStep({ data, onChange }: Props) {
           </div>
         </div>
       ))}
+
+      {data.length > 0 && (
+        <button type="button" className="step__add-btn step__add-btn--bottom" onClick={add}>
+          + Ajouter une formation
+        </button>
+      )}
     </div>
   );
 }

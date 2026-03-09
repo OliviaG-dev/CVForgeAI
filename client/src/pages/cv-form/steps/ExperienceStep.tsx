@@ -239,6 +239,12 @@ export default function ExperienceStep({ data, onChange }: Props) {
           </div>
         </div>
       ))}
+
+      {data.length > 0 && (
+        <button type="button" className="step__add-btn step__add-btn--bottom" onClick={add}>
+          + Ajouter une expérience
+        </button>
+      )}
     </div>
   );
 }
