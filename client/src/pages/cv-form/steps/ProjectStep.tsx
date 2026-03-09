@@ -1,23 +1,22 @@
 import { useState } from 'react';
-import type { Education } from '../../../types/cv';
+import type { Project } from '../../../types/cv';
 
 interface Props {
-  data: Education[];
-  onChange: (data: Education[]) => void;
+  data: Project[];
+  onChange: (data: Project[]) => void;
 }
 
 function generateId() {
   return Math.random().toString(36).substring(2, 9);
 }
 
-const emptyEducation: () => Education = () => ({
+const emptyProject: () => Project = () => ({
   id: generateId(),
-  degree: '',
-  school: '',
-  city: '',
+  name: '',
+  description: '',
+  url: '',
   startDate: '',
   endDate: '',
-  specialty: '',
   technicalSkills: [],
   tools: [],
   softSkills: [],
@@ -67,7 +66,7 @@ function SkillTagInput({ tags, onChange, placeholder }: { tags: string[]; onChan
   );
 }
 
-function sortByDateDesc(items: Education[]): Education[] {
+function sortByDateDesc(items: Project[]): Project[] {
   return [...items].sort((a, b) => {
     const dateA = a.startDate || '';
     const dateB = b.startDate || '';
@@ -78,75 +77,87 @@ function sortByDateDesc(items: Education[]): Education[] {
   });
 }
 
-export default function EducationStep({ data, onChange }: Props) {
-  const add = () => onChange([...data, emptyEducation()]);
+export default function ProjectStep({ data, onChange }: Props) {
+  const [autoSort, setAutoSort] = useState(true);
 
-  const remove = (id: string) => onChange(data.filter((e) => e.id !== id));
+  const add = () => onChange([...data, emptyProject()]);
 
-  const update = (id: string, field: keyof Education, value: string) => {
-    onChange(data.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
+  const remove = (id: string) => onChange(data.filter((p) => p.id !== id));
+
+  const update = (id: string, field: keyof Project, value: string) => {
+    onChange(data.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
   };
 
   const updateSkills = (id: string, field: 'technicalSkills' | 'tools' | 'softSkills', value: string[]) => {
-    onChange(data.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
+    onChange(data.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
   };
 
-  const sorted = sortByDateDesc(data);
+  const displayed = autoSort ? sortByDateDesc(data) : data;
 
   return (
     <div className="step">
       <div className="step__header-row">
-        <h2 className="step__title">Formation</h2>
+        <h2 className="step__title">Projets</h2>
         <button type="button" className="step__add-btn" onClick={add}>
           + Ajouter
         </button>
       </div>
 
-      {data.length === 0 && (
-        <p className="step__empty">Aucune formation ajoutée.<br/>Cliquez sur &laquo; + Ajouter &raquo; pour commencer.</p>
+      {data.length > 1 && (
+        <label className="step__sort-toggle">
+          <input
+            type="checkbox"
+            checked={autoSort}
+            onChange={(e) => setAutoSort(e.target.checked)}
+          />
+          <span>Trier par date (plus récent en premier)</span>
+        </label>
       )}
 
-      {sorted.map((edu, i) => (
-        <div key={edu.id} className="step__card">
+      {data.length === 0 && (
+        <p className="step__empty">Aucun projet ajouté.<br/>Cliquez sur &laquo; + Ajouter &raquo; pour commencer.</p>
+      )}
+
+      {displayed.map((proj, i) => (
+        <div key={proj.id} className="step__card">
           <div className="step__card-header">
-            <span className="step__card-number">Formation {i + 1}</span>
-            <button type="button" className="step__remove-btn" onClick={() => remove(edu.id)}>
+            <span className="step__card-number">Projet {i + 1}</span>
+            <button type="button" className="step__remove-btn" onClick={() => remove(proj.id)}>
               Supprimer
             </button>
           </div>
 
-          <div className="step__row">
-            <label className="step__field">
-              <span className="step__label">Diplôme *</span>
-              <input
-                type="text"
-                className="step__input"
-                value={edu.degree}
-                onChange={(e) => update(edu.id, 'degree', e.target.value)}
-                placeholder="Master Informatique"
-              />
-            </label>
-            <label className="step__field">
-              <span className="step__label">Établissement *</span>
-              <input
-                type="text"
-                className="step__input"
-                value={edu.school}
-                onChange={(e) => update(edu.id, 'school', e.target.value)}
-                placeholder="Université Paris-Saclay"
-              />
-            </label>
-          </div>
+          <label className="step__field">
+            <span className="step__label">Nom du projet *</span>
+            <input
+              type="text"
+              className="step__input"
+              value={proj.name}
+              onChange={(e) => update(proj.id, 'name', e.target.value)}
+              placeholder="Mon application web"
+            />
+          </label>
+
+          <label className="step__field">
+            <span className="step__label">Description</span>
+            <textarea
+              className="step__textarea"
+              value={proj.description}
+              onChange={(e) => update(proj.id, 'description', e.target.value)}
+              placeholder="Décrivez le projet, son objectif et vos contributions..."
+              rows={3}
+            />
+          </label>
 
           <div className="step__row">
             <label className="step__field">
-              <span className="step__label">Ville</span>
+              <span className="step__label">Lien (optionnel)</span>
               <input
-                type="text"
+                type="url"
                 className="step__input"
-                value={edu.city}
-                onChange={(e) => update(edu.id, 'city', e.target.value)}
-                placeholder="Paris"
+                value={proj.url}
+                onChange={(e) => update(proj.id, 'url', e.target.value)}
+                placeholder="https://github.com/mon-projet"
               />
             </label>
             <label className="step__field">
@@ -154,8 +165,8 @@ export default function EducationStep({ data, onChange }: Props) {
               <input
                 type="month"
                 className="step__input"
-                value={edu.startDate}
-                onChange={(e) => update(edu.id, 'startDate', e.target.value)}
+                value={proj.startDate}
+                onChange={(e) => update(proj.id, 'startDate', e.target.value)}
               />
             </label>
             <label className="step__field">
@@ -163,22 +174,11 @@ export default function EducationStep({ data, onChange }: Props) {
               <input
                 type="month"
                 className="step__input"
-                value={edu.endDate}
-                onChange={(e) => update(edu.id, 'endDate', e.target.value)}
+                value={proj.endDate}
+                onChange={(e) => update(proj.id, 'endDate', e.target.value)}
               />
             </label>
           </div>
-
-          <label className="step__field">
-            <span className="step__label">Spécialité / Mention</span>
-            <input
-              type="text"
-              className="step__input"
-              value={edu.specialty}
-              onChange={(e) => update(edu.id, 'specialty', e.target.value)}
-              placeholder="Spécialité IA et Data Science"
-            />
-          </label>
 
           <div className="exp-skills">
             <div className="exp-skills__header">
@@ -189,25 +189,25 @@ export default function EducationStep({ data, onChange }: Props) {
               <div className="exp-skills__category">
                 <span className="exp-skills__cat-label">Techniques</span>
                 <SkillTagInput
-                  tags={edu.technicalSkills}
-                  onChange={(v) => updateSkills(edu.id, 'technicalSkills', v)}
-                  placeholder="Python, SQL..."
+                  tags={proj.technicalSkills}
+                  onChange={(v) => updateSkills(proj.id, 'technicalSkills', v)}
+                  placeholder="React, Python..."
                 />
               </div>
               <div className="exp-skills__category">
                 <span className="exp-skills__cat-label">Outils</span>
                 <SkillTagInput
-                  tags={edu.tools}
-                  onChange={(v) => updateSkills(edu.id, 'tools', v)}
-                  placeholder="Jupyter, MATLAB..."
+                  tags={proj.tools}
+                  onChange={(v) => updateSkills(proj.id, 'tools', v)}
+                  placeholder="Firebase, Vercel..."
                 />
               </div>
               <div className="exp-skills__category">
                 <span className="exp-skills__cat-label">Transversales</span>
                 <SkillTagInput
-                  tags={edu.softSkills}
-                  onChange={(v) => updateSkills(edu.id, 'softSkills', v)}
-                  placeholder="Travail d'équipe..."
+                  tags={proj.softSkills}
+                  onChange={(v) => updateSkills(proj.id, 'softSkills', v)}
+                  placeholder="Autonomie..."
                 />
               </div>
             </div>

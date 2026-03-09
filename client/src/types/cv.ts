@@ -21,6 +21,9 @@ export interface Experience {
   current: boolean;
   description: string;
   projectLink: string;
+  technicalSkills: string[];
+  tools: string[];
+  softSkills: string[];
 }
 
 export interface Education {
@@ -31,6 +34,21 @@ export interface Education {
   startDate: string;
   endDate: string;
   specialty: string;
+  technicalSkills: string[];
+  tools: string[];
+  softSkills: string[];
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  url: string;
+  startDate: string;
+  endDate: string;
+  technicalSkills: string[];
+  tools: string[];
+  softSkills: string[];
 }
 
 export interface Language {
@@ -51,13 +69,16 @@ export type AccentColor = 'blue' | 'green' | 'orange' | 'red' | 'pink' | 'violet
 export interface CVData {
   personalInfo: PersonalInfo;
   experiences: Experience[];
+  projects: Project[];
   education: Education[];
   technicalSkills: string[];
+  tools: string[];
   softSkills: string[];
   languages: Language[];
   certifications: Certification[];
   interests: string[];
   accentColor: AccentColor;
+  atsKeywords: string;
 }
 
 export const emptyCVData: CVData = {
@@ -74,11 +95,14 @@ export const emptyCVData: CVData = {
     github: '',
   },
   experiences: [],
+  projects: [],
   education: [],
   technicalSkills: [],
+  tools: [],
   softSkills: [],
   languages: [],
   certifications: [],
   interests: [],
   accentColor: 'blue',
+  atsKeywords: '',
 };

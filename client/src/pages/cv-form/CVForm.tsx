@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { CVData, PersonalInfo, Experience, Education, Language, Certification, AccentColor } from '../../types/cv';
+import type { CVData, PersonalInfo, Experience, Project, Education, Language, Certification, AccentColor } from '../../types/cv';
 import { emptyCVData } from '../../types/cv';
 import PersonalInfoStep from './steps/PersonalInfoStep.js';
 import ExperienceStep from './steps/ExperienceStep.js';
+import ProjectStep from './steps/ProjectStep.js';
 import EducationStep from './steps/EducationStep.js';
 import SkillsStep from './steps/SkillsStep.js';
 import ExtrasStep from './steps/ExtrasStep.js';
@@ -12,6 +13,7 @@ import './CVForm.css';
 const STEPS = [
   { label: 'Infos personnelles', key: 'personal' },
   { label: 'Expériences', key: 'experience' },
+  { label: 'Projets', key: 'projects' },
   { label: 'Formation', key: 'education' },
   { label: 'Compétences', key: 'skills' },
   { label: 'Extras', key: 'extras' },
@@ -28,6 +30,60 @@ export default function CVForm() {
   const updateData = <K extends keyof CVData>(key: K, value: CVData[K]) => {
     setData((prev) => ({ ...prev, [key]: value }));
   };
+
+  const mergeUnique = (existing: string[], incoming: string[]) => {
+    const set = new Set(existing);
+    for (const s of incoming) if (!set.has(s)) set.add(s);
+    return set.size === existing.length ? existing : Array.from(set);
+  };
+
+  const handleExperiencesChange = useCallback((experiences: Experience[]) => {
+    setData((prev) => {
+      const expTech = experiences.flatMap((e) => e.technicalSkills);
+      const expTools = experiences.flatMap((e) => e.tools);
+      const expSoft = experiences.flatMap((e) => e.softSkills);
+
+      return {
+        ...prev,
+        experiences,
+        technicalSkills: mergeUnique(prev.technicalSkills, expTech),
+        tools: mergeUnique(prev.tools, expTools),
+        softSkills: mergeUnique(prev.softSkills, expSoft),
+      };
+    });
+  }, []);
+
+  const handleProjectsChange = useCallback((projects: Project[]) => {
+    setData((prev) => {
+      const projTech = projects.flatMap((p) => p.technicalSkills);
+      const projTools = projects.flatMap((p) => p.tools);
+      const projSoft = projects.flatMap((p) => p.softSkills);
+
+      return {
+        ...prev,
+        projects,
+        technicalSkills: mergeUnique(prev.technicalSkills, projTech),
+        tools: mergeUnique(prev.tools, projTools),
+        softSkills: mergeUnique(prev.softSkills, projSoft),
+      };
+    });
+  }, []);
+
+  const handleEducationChange = useCallback((education: Education[]) => {
+    setData((prev) => {
+      const eduTech = education.flatMap((e) => e.technicalSkills);
+      const eduTools = education.flatMap((e) => e.tools);
+      const eduSoft = education.flatMap((e) => e.softSkills);
+
+      return {
+        ...prev,
+        education,
+        technicalSkills: mergeUnique(prev.technicalSkills, eduTech),
+        tools: mergeUnique(prev.tools, eduTools),
+        softSkills: mergeUnique(prev.softSkills, eduSoft),
+      };
+    });
+  }, []);
 
   const next = () => setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
   const prev = () => setCurrentStep((s) => Math.max(s - 1, 0));
@@ -70,26 +126,37 @@ export default function CVForm() {
         return (
           <ExperienceStep
             data={data.experiences}
-            onChange={(v: Experience[]) => updateData('experiences', v)}
+            onChange={handleExperiencesChange}
           />
         );
       case 2:
         return (
-          <EducationStep
-            data={data.education}
-            onChange={(v: Education[]) => updateData('education', v)}
+          <ProjectStep
+            data={data.projects}
+            onChange={handleProjectsChange}
           />
         );
       case 3:
         return (
-          <SkillsStep
-            technicalSkills={data.technicalSkills}
-            softSkills={data.softSkills}
-            onChangeTechnical={(v: string[]) => updateData('technicalSkills', v)}
-            onChangeSoft={(v: string[]) => updateData('softSkills', v)}
+          <EducationStep
+            data={data.education}
+            onChange={handleEducationChange}
           />
         );
       case 4:
+        return (
+          <SkillsStep
+            technicalSkills={data.technicalSkills}
+            tools={data.tools}
+            softSkills={data.softSkills}
+            atsKeywords={data.atsKeywords}
+            onChangeTechnical={(v: string[]) => updateData('technicalSkills', v)}
+            onChangeTools={(v: string[]) => updateData('tools', v)}
+            onChangeSoft={(v: string[]) => updateData('softSkills', v)}
+            onChangeAtsKeywords={(v: string) => updateData('atsKeywords', v)}
+          />
+        );
+      case 5:
         return (
           <ExtrasStep
             languages={data.languages}

@@ -21,6 +21,9 @@ interface Experience {
   current: boolean;
   description: string;
   projectLink: string;
+  technicalSkills: string[];
+  tools: string[];
+  softSkills: string[];
 }
 
 interface Education {
@@ -31,6 +34,21 @@ interface Education {
   startDate: string;
   endDate: string;
   specialty: string;
+  technicalSkills: string[];
+  tools: string[];
+  softSkills: string[];
+}
+
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  url: string;
+  startDate: string;
+  endDate: string;
+  technicalSkills: string[];
+  tools: string[];
+  softSkills: string[];
 }
 
 interface Language {
@@ -62,13 +80,16 @@ const COLOR_MAP: Record<AccentColor, string> = {
 interface CVData {
   personalInfo: PersonalInfo;
   experiences: Experience[];
+  projects: Project[];
   education: Education[];
   technicalSkills: string[];
+  tools: string[];
   softSkills: string[];
   languages: Language[];
   certifications: Certification[];
   interests: string[];
   accentColor?: AccentColor;
+  atsKeywords?: string;
 }
 
 const MONTHS = [
@@ -111,8 +132,24 @@ function descriptionToHtml(desc: string): string {
   return `<ul>${items}</ul>`;
 }
 
+function sortByStartDateDesc<T extends { startDate: string; current?: boolean }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    if (a.current && !b.current) return -1;
+    if (!a.current && b.current) return 1;
+    const dateA = a.startDate || '';
+    const dateB = b.startDate || '';
+    if (!dateA && !dateB) return 0;
+    if (!dateA) return 1;
+    if (!dateB) return -1;
+    return dateB.localeCompare(dateA);
+  });
+}
+
 export function generateCVHTML(data: CVData): string {
-  const { personalInfo: p, experiences, education, technicalSkills, softSkills, languages, certifications, interests } = data;
+  const { personalInfo: p, technicalSkills, tools, softSkills, languages, certifications, interests } = data;
+  const experiences = sortByStartDateDesc(data.experiences);
+  const projects = sortByStartDateDesc(data.projects || []);
+  const education = sortByStartDateDesc(data.education);
   const accent = COLOR_MAP[data.accentColor || 'blue'];
 
   const ico = (svg: string) => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg>`;
@@ -132,8 +169,9 @@ export function generateCVHTML(data: CVData): string {
   if (p.github) contactItems.push(`<a href="${esc(p.github)}" class="info-item">${icoGithub}<span>GitHub</span></a>`);
   const contactLine = contactItems.join('<span class="sep">•</span>');
 
-  const hasSkills = technicalSkills.length > 0 || softSkills.length > 0;
+  const hasSkills = technicalSkills.length > 0 || tools.length > 0 || softSkills.length > 0;
   const hasExperiences = experiences.length > 0;
+  const hasProjects = (projects || []).length > 0;
   const hasEducation = education.length > 0;
   const hasLanguages = languages.length > 0;
   const hasCertifications = certifications.length > 0;
@@ -345,6 +383,14 @@ export function generateCVHTML(data: CVData): string {
 
   /* ── Interests ── */
   .interests { font-size: 9.5pt; color: #374151; }
+
+  .ats-hidden {
+    color: #ffffff;
+    font-size: 1pt;
+    line-height: 1pt;
+    margin: 0;
+    padding: 0;
+  }
 </style>
 </head>
 <body>
@@ -367,6 +413,11 @@ export function generateCVHTML(data: CVData): string {
       <span class="skills-cat">Compétences techniques</span>
       <span class="skills-val">${technicalSkills.map(esc).join(', ')}</span>
     </div>` : ''}
+    ${tools.length > 0 ? `
+    <div class="skills-row">
+      <span class="skills-cat">Outils</span>
+      <span class="skills-val">${tools.map(esc).join(', ')}</span>
+    </div>` : ''}
     ${softSkills.length > 0 ? `
     <div class="skills-row">
       <span class="skills-cat">Compétences transversales</span>
@@ -388,6 +439,23 @@ export function generateCVHTML(data: CVData): string {
       </div>
       ${exp.description ? `<div class="entry__desc">${descriptionToHtml(exp.description)}</div>` : ''}
       ${exp.projectLink ? `<div class="entry__link"><a href="${esc(exp.projectLink)}">Voir le projet</a></div>` : ''}
+    </div>`;
+    }).join('')}
+  </div>` : ''}
+
+  ${hasProjects ? `
+  <!-- Projets -->
+  <div class="section">
+    <div class="section__title">Projets</div>
+    ${(projects || []).map(proj => {
+      return `
+    <div class="entry">
+      <div class="entry__line1">
+        <span class="entry__role">${esc(proj.name)}</span>
+        <span class="entry__dates">${dateRange(proj.startDate, proj.endDate)}</span>
+      </div>
+      ${proj.description ? `<div class="entry__desc">${descriptionToHtml(proj.description)}</div>` : ''}
+      ${proj.url ? `<div class="entry__link"><a href="${esc(proj.url)}">${cleanUrl(proj.url)}</a></div>` : ''}
     </div>`;
     }).join('')}
   </div>` : ''}
@@ -436,6 +504,8 @@ export function generateCVHTML(data: CVData): string {
     <div class="section__title">Centres d'intérêt</div>
     <div class="interests">${interests.map(esc).join(', ')}</div>
   </div>` : ''}
+
+  ${data.atsKeywords ? `<div class="ats-hidden">${esc(data.atsKeywords)}</div>` : ''}
 
 </body>
 </html>`;

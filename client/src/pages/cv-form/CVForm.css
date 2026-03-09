@@ -641,6 +641,36 @@
   margin-bottom: 0.75rem;
 }
 
+/* ─── Sort toggle ─── */
+
+.step__sort-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  padding: 0.4rem 0.7rem;
+  background: rgba(100, 108, 255, 0.05);
+  border: 1px solid rgba(100, 108, 255, 0.12);
+  border-radius: 10px;
+  width: fit-content;
+  transition: all 0.2s ease;
+}
+
+.step__sort-toggle:hover {
+  background: rgba(100, 108, 255, 0.08);
+  border-color: rgba(100, 108, 255, 0.2);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.step__sort-toggle input[type="checkbox"] {
+  accent-color: #646cff;
+  width: 15px;
+  height: 15px;
+}
+
 /* ─── Tags (skills, interests) ─── */
 
 .step__tag-input-wrapper {
@@ -714,6 +744,127 @@
 .step__tag-remove:hover {
   color: #f87171;
   background: rgba(248, 113, 113, 0.15);
+}
+
+/* ─── Experience skills ─── */
+
+.exp-skills {
+  margin-top: 0.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.exp-skills__header {
+  margin-bottom: 0.6rem;
+}
+
+.exp-skills__header .step__hint {
+  margin-top: 0.1rem;
+  margin-bottom: 0;
+}
+
+.exp-skills__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.exp-skills__category {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.exp-skills__cat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.03em;
+}
+
+.exp-skills__tag-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.exp-skills__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.exp-skills__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: linear-gradient(135deg, rgba(100, 108, 255, 0.1), rgba(167, 139, 250, 0.08));
+  border: 1px solid rgba(100, 108, 255, 0.18);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.74rem;
+  color: #c7d2fe;
+  animation: tagAppear 0.25s ease-out;
+}
+
+.exp-skills__tag:hover {
+  background: linear-gradient(135deg, rgba(100, 108, 255, 0.18), rgba(167, 139, 250, 0.12));
+  border-color: rgba(100, 108, 255, 0.3);
+}
+
+.exp-skills__tag-remove {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.exp-skills__tag-remove:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.15);
+}
+
+.exp-skills__input {
+  padding: 0.4rem 0.7rem !important;
+  font-size: 0.82rem !important;
+}
+
+/* ─── ATS section ─── */
+
+.step__ats-info {
+  background: rgba(100, 108, 255, 0.06);
+  border: 1px solid rgba(100, 108, 255, 0.15);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.step__ats-desc {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+  margin: 0 0 0.5rem;
+}
+
+.step__ats-desc strong {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.step__ats-tip {
+  font-size: 0.75rem;
+  color: #818cf8;
+  margin: 0;
+  font-style: italic;
 }
 
 /* ─── Color picker ─── */

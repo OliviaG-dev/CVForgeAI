@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Experience } from '../../../types/cv';
 
 interface Props {
@@ -19,7 +20,67 @@ const emptyExperience: () => Experience = () => ({
   current: false,
   description: '',
   projectLink: '',
+  technicalSkills: [],
+  tools: [],
+  softSkills: [],
 });
+
+function SkillTagInput({ tags, onChange, placeholder }: { tags: string[]; onChange: (t: string[]) => void; placeholder: string }) {
+  const [input, setInput] = useState('');
+
+  const addTag = () => {
+    const trimmed = input.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      onChange([...tags, trimmed]);
+    }
+    setInput('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag();
+    }
+    if (e.key === 'Backspace' && input === '' && tags.length > 0) {
+      onChange(tags.slice(0, -1));
+    }
+  };
+
+  return (
+    <div className="exp-skills__tag-input">
+      <div className="exp-skills__tags">
+        {tags.map((tag) => (
+          <span key={tag} className="exp-skills__tag">
+            {tag}
+            <button type="button" className="exp-skills__tag-remove" onClick={() => onChange(tags.filter((t) => t !== tag))}>×</button>
+          </span>
+        ))}
+      </div>
+      <input
+        type="text"
+        className="step__input exp-skills__input"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={addTag}
+        placeholder={tags.length === 0 ? placeholder : 'Ajouter...'}
+      />
+    </div>
+  );
+}
+
+function sortByDateDesc(items: Experience[]): Experience[] {
+  return [...items].sort((a, b) => {
+    if (a.current && !b.current) return -1;
+    if (!a.current && b.current) return 1;
+    const dateA = a.startDate || '';
+    const dateB = b.startDate || '';
+    if (!dateA && !dateB) return 0;
+    if (!dateA) return 1;
+    if (!dateB) return -1;
+    return dateB.localeCompare(dateA);
+  });
+}
 
 export default function ExperienceStep({ data, onChange }: Props) {
   const add = () => onChange([...data, emptyExperience()]);
@@ -29,6 +90,12 @@ export default function ExperienceStep({ data, onChange }: Props) {
   const update = (id: string, field: keyof Experience, value: string | boolean) => {
     onChange(data.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
   };
+
+  const updateSkills = (id: string, field: 'technicalSkills' | 'tools' | 'softSkills', value: string[]) => {
+    onChange(data.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
+  };
+
+  const sorted = sortByDateDesc(data);
 
   return (
     <div className="step">
@@ -43,7 +110,7 @@ export default function ExperienceStep({ data, onChange }: Props) {
         <p className="step__empty">Aucune expérience ajoutée.<br/>Cliquez sur &laquo; + Ajouter &raquo; pour commencer.</p>
       )}
 
-      {data.map((exp, i) => (
+      {sorted.map((exp, i) => (
         <div key={exp.id} className="step__card">
           <div className="step__card-header">
             <span className="step__card-number">Expérience {i + 1}</span>
@@ -137,6 +204,39 @@ export default function ExperienceStep({ data, onChange }: Props) {
               placeholder="https://mon-projet.com"
             />
           </label>
+
+          <div className="exp-skills">
+            <div className="exp-skills__header">
+              <span className="step__label">Compétences associées</span>
+              <p className="step__hint">Ajoutées automatiquement à la section Compétences</p>
+            </div>
+            <div className="exp-skills__grid">
+              <div className="exp-skills__category">
+                <span className="exp-skills__cat-label">Techniques</span>
+                <SkillTagInput
+                  tags={exp.technicalSkills}
+                  onChange={(v) => updateSkills(exp.id, 'technicalSkills', v)}
+                  placeholder="React, Node.js..."
+                />
+              </div>
+              <div className="exp-skills__category">
+                <span className="exp-skills__cat-label">Outils</span>
+                <SkillTagInput
+                  tags={exp.tools}
+                  onChange={(v) => updateSkills(exp.id, 'tools', v)}
+                  placeholder="Git, Docker..."
+                />
+              </div>
+              <div className="exp-skills__category">
+                <span className="exp-skills__cat-label">Transversales</span>
+                <SkillTagInput
+                  tags={exp.softSkills}
+                  onChange={(v) => updateSkills(exp.id, 'softSkills', v)}
+                  placeholder="Leadership..."
+                />
+              </div>
+            </div>
+          </div>
         </div>
       ))}
     </div>
