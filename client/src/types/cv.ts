@@ -9,6 +9,7 @@ export interface PersonalInfo {
   linkedin: string;
   portfolio: string;
   github: string;
+  photo: string;
 }
 
 export interface Experience {
@@ -65,6 +66,7 @@ export interface Certification {
 }
 
 export type AccentColor = 'blue' | 'green' | 'orange' | 'red' | 'pink' | 'violet' | 'black' | 'teal';
+export type CVTemplate = 'classic' | 'creative';
 
 export interface CVData {
   personalInfo: PersonalInfo;
@@ -78,6 +80,7 @@ export interface CVData {
   certifications: Certification[];
   interests: string[];
   accentColor: AccentColor;
+  template: CVTemplate;
   atsKeywords: string;
 }
 
@@ -93,6 +96,7 @@ export const emptyCVData: CVData = {
     linkedin: '',
     portfolio: '',
     github: '',
+    photo: '',
   },
   experiences: [],
   projects: [],
@@ -104,5 +108,6 @@ export const emptyCVData: CVData = {
   certifications: [],
   interests: [],
   accentColor: 'blue',
+  template: 'classic',
   atsKeywords: '',
 };

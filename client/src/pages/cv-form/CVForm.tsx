@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { CVData, PersonalInfo, Experience, Project, Education, Language, Certification, AccentColor } from '../../types/cv';
+import type { CVData, PersonalInfo, Experience, Project, Education, Language, Certification, AccentColor, CVTemplate } from '../../types/cv';
 import { emptyCVData } from '../../types/cv';
 import PersonalInfoStep from './steps/PersonalInfoStep.js';
 import ExperienceStep from './steps/ExperienceStep.js';
@@ -183,10 +183,12 @@ export default function CVForm() {
             certifications={data.certifications}
             interests={data.interests}
             accentColor={data.accentColor}
+            template={data.template}
             onChangeLanguages={(v: Language[]) => updateData('languages', v)}
             onChangeCertifications={(v: Certification[]) => updateData('certifications', v)}
             onChangeInterests={(v: string[]) => updateData('interests', v)}
             onChangeAccentColor={(v: AccentColor) => updateData('accentColor', v)}
+            onChangeTemplate={(v: CVTemplate) => updateData('template', v)}
           />
         );
       default:

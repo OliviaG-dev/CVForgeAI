@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { generateCV, improveDescription } from '../services/openai.js';
-import { generateCVHTML } from '../templates/cv.js';
+import { generateCVHTMLForTemplate } from '../templates/cv.js';
 import { generatePDF } from '../services/pdf.js';
 
 export const cvRouter = Router();
@@ -29,8 +29,8 @@ cvRouter.post('/improve', async (req, res) => {
 
 cvRouter.post('/pdf', async (req, res) => {
   try {
-    const html = generateCVHTML(req.body);
-    const pdf = await generatePDF(html);
+    const html = generateCVHTMLForTemplate(req.body);
+    const pdf = await generatePDF(html, { noMargins: req.body.template === 'creative' });
 
     const { personalInfo } = req.body;
     const filename = personalInfo?.firstName && personalInfo?.lastName

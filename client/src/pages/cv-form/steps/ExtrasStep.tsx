@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Language, Certification, AccentColor } from '../../../types/cv';
+import type { Language, Certification, AccentColor, CVTemplate } from '../../../types/cv';
 
 const ACCENT_COLORS: { value: AccentColor; label: string; hex: string }[] = [
   { value: 'blue',   label: 'Bleu',   hex: '#2563eb' },
@@ -12,15 +12,22 @@ const ACCENT_COLORS: { value: AccentColor; label: string; hex: string }[] = [
   { value: 'black',  label: 'Noir',   hex: '#1f2937' },
 ];
 
+const TEMPLATES: { value: CVTemplate; label: string; desc: string }[] = [
+  { value: 'classic', label: 'Classique', desc: 'Sobre et professionnel, optimisé ATS' },
+  { value: 'creative', label: 'Créatif', desc: 'Design 2 colonnes avec photo' },
+];
+
 interface Props {
   languages: Language[];
   certifications: Certification[];
   interests: string[];
   accentColor: AccentColor;
+  template: CVTemplate;
   onChangeLanguages: (data: Language[]) => void;
   onChangeCertifications: (data: Certification[]) => void;
   onChangeInterests: (data: string[]) => void;
   onChangeAccentColor: (color: AccentColor) => void;
+  onChangeTemplate: (template: CVTemplate) => void;
 }
 
 function generateId() {
@@ -34,10 +41,12 @@ export default function ExtrasStep({
   certifications,
   interests,
   accentColor,
+  template,
   onChangeLanguages,
   onChangeCertifications,
   onChangeInterests,
   onChangeAccentColor,
+  onChangeTemplate,
 }: Props) {
   const [interestInput, setInterestInput] = useState('');
 
@@ -192,6 +201,22 @@ export default function ExtrasStep({
         onBlur={addInterest}
         placeholder="Sport, Voyages, Bénévolat..."
       />
+
+      {/* Template */}
+      <h2 className="step__title step__section-gap">Template du CV</h2>
+      <div className="step__template-grid">
+        {TEMPLATES.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            className={`step__template-card ${template === t.value ? 'step__template-card--active' : ''}`}
+            onClick={() => onChangeTemplate(t.value)}
+          >
+            <span className="step__template-name">{t.label}</span>
+            <span className="step__template-desc">{t.desc}</span>
+          </button>
+        ))}
+      </div>
 
       {/* Couleur d'accent */}
       <h2 className="step__title step__section-gap">Couleur du CV</h2>
