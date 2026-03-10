@@ -84,7 +84,17 @@ export default function EducationStep({ data, onChange }: Props) {
   const remove = (id: string) => onChange(data.filter((e) => e.id !== id));
 
   const update = (id: string, field: keyof Education, value: string) => {
-    onChange(data.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
+    onChange(data.map((e) => {
+      if (e.id !== id) return e;
+      const next = { ...e, [field]: value };
+      if (field === 'startDate' && value && e.endDate && e.endDate < value) {
+        next.endDate = value;
+      }
+      if (field === 'endDate' && value && e.startDate && value < e.startDate) {
+        return e;
+      }
+      return next;
+    }));
   };
 
   const updateSkills = (id: string, field: 'technicalSkills' | 'tools' | 'softSkills', value: string[]) => {
@@ -165,6 +175,7 @@ export default function EducationStep({ data, onChange }: Props) {
                 className="step__input"
                 value={edu.endDate}
                 onChange={(e) => update(edu.id, 'endDate', e.target.value)}
+                min={edu.startDate || undefined}
               />
             </label>
           </div>

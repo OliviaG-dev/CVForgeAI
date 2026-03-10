@@ -85,7 +85,17 @@ export default function ProjectStep({ data, onChange }: Props) {
   const remove = (id: string) => onChange(data.filter((p) => p.id !== id));
 
   const update = (id: string, field: keyof Project, value: string) => {
-    onChange(data.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+    onChange(data.map((p) => {
+      if (p.id !== id) return p;
+      const next = { ...p, [field]: value };
+      if (field === 'startDate' && value && p.endDate && p.endDate < value) {
+        next.endDate = value;
+      }
+      if (field === 'endDate' && value && p.startDate && value < p.startDate) {
+        return p;
+      }
+      return next;
+    }));
   };
 
   const updateSkills = (id: string, field: 'technicalSkills' | 'tools' | 'softSkills', value: string[]) => {
@@ -176,6 +186,7 @@ export default function ProjectStep({ data, onChange }: Props) {
                 className="step__input"
                 value={proj.endDate}
                 onChange={(e) => update(proj.id, 'endDate', e.target.value)}
+                min={proj.startDate || undefined}
               />
             </label>
           </div>

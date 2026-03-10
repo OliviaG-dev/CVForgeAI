@@ -217,19 +217,22 @@ function generateClassicCVHTML(data: CVData): string {
   body {
     font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
     color: #1f2937;
-    font-size: 14pt;
+    font-size: 10pt;
     line-height: 1.55;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
   }
 
   a { color: var(--accent); text-decoration: none; }
 
   /* ── Header ── */
-  .header { text-align: center; margin-bottom: 28pt; }
+  .header { text-align: center; margin-bottom: 20pt; }
 
   .header__profession {
-    font-size: 15pt;
+    font-size: 10.5pt;
     font-weight: 600;
     color: var(--accent);
     text-transform: uppercase;
@@ -238,7 +241,7 @@ function generateClassicCVHTML(data: CVData): string {
   }
 
   .header__name {
-    font-size: 36pt;
+    font-size: 24pt;
     font-weight: 700;
     color: #111827;
     letter-spacing: 0.5pt;
@@ -246,7 +249,7 @@ function generateClassicCVHTML(data: CVData): string {
   }
 
   .header__summary {
-    font-size: 14pt;
+    font-size: 9.5pt;
     color: #4b5563;
     max-width: 420pt;
     margin: 8pt auto 0;
@@ -255,8 +258,8 @@ function generateClassicCVHTML(data: CVData): string {
   }
 
   .header__bar {
-    width: 50pt;
-    height: 3pt;
+    width: 40pt;
+    height: 2.5pt;
     background: var(--accent);
     margin: 0 auto 10pt;
     border-radius: 2pt;
@@ -267,7 +270,7 @@ function generateClassicCVHTML(data: CVData): string {
     flex-wrap: wrap;
     justify-content: center;
     gap: 4pt 6pt;
-    font-size: 13pt;
+    font-size: 9pt;
     color: #6b7280;
   }
 
@@ -282,8 +285,8 @@ function generateClassicCVHTML(data: CVData): string {
   a.info-item:hover { color: var(--accent); }
 
   .ico {
-    width: 16pt;
-    height: 16pt;
+    width: 11pt;
+    height: 11pt;
     flex-shrink: 0;
     color: var(--accent);
   }
@@ -297,10 +300,10 @@ function generateClassicCVHTML(data: CVData): string {
   }
 
   /* ── Sections ── */
-  .section { margin-bottom: 24pt; }
+  .section { margin-bottom: 18pt; max-width: 100%; }
 
   .section__title {
-    font-size: 15pt;
+    font-size: 10.5pt;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1.8pt;
@@ -313,10 +316,10 @@ function generateClassicCVHTML(data: CVData): string {
   /* ── Skills ── */
   .skills-grid {
     display: grid;
-    grid-template-columns: 220pt 1fr;
-    gap: 10pt 20pt;
+    grid-template-columns: 180pt 1fr;
+    gap: 8pt 16pt;
     align-items: start;
-    font-size: 14pt;
+    font-size: 9.5pt;
     line-height: 1.5;
   }
 
@@ -330,8 +333,19 @@ function generateClassicCVHTML(data: CVData): string {
 
   /* ── Entries (experiences / education) ── */
   .entry {
-    margin-bottom: 16pt;
+    margin-bottom: 14pt;
     page-break-inside: avoid;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+  }
+
+  .entry__desc {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
   }
 
   .entry__line1 {
@@ -343,9 +357,13 @@ function generateClassicCVHTML(data: CVData): string {
   }
 
   .entry__role {
-    font-size: 15pt;
+    font-size: 10.5pt;
     font-weight: 700;
     color: #111827;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
   }
 
   .entry__at {
@@ -354,13 +372,13 @@ function generateClassicCVHTML(data: CVData): string {
   }
 
   .entry__dates {
-    font-size: 13pt;
+    font-size: 9pt;
     color: #6b7280;
     white-space: nowrap;
   }
 
   .entry__sub {
-    font-size: 13pt;
+    font-size: 9pt;
     color: #6b7280;
     margin-top: 1pt;
   }
@@ -368,19 +386,25 @@ function generateClassicCVHTML(data: CVData): string {
   .entry ul {
     margin-top: 5pt;
     padding-left: 14pt;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
   }
 
   .entry li {
     margin-bottom: 2.5pt;
-    font-size: 14pt;
+    font-size: 9.5pt;
     color: #374151;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
   }
 
   .entry li::marker { color: var(--accent); }
 
   .entry__link {
     margin-top: 4pt;
-    font-size: 13pt;
+    font-size: 8pt;
   }
 
   .entry__link a {
@@ -389,12 +413,27 @@ function generateClassicCVHTML(data: CVData): string {
     font-weight: 500;
   }
 
+  .entry__skills {
+    margin-top: 4pt;
+    font-size: 8pt;
+    color: #6b7280;
+  }
+
+  .entry__skills span {
+    display: inline;
+  }
+
+  .entry__skills span:not(:last-child)::after {
+    content: " · ";
+    color: #9ca3af;
+  }
+
   /* ── Languages ── */
   .langs {
     display: flex;
     flex-wrap: wrap;
     gap: 4pt 24pt;
-    font-size: 14pt;
+    font-size: 9.5pt;
   }
 
   .lang__name { font-weight: 600; color: #374151; }
@@ -403,16 +442,16 @@ function generateClassicCVHTML(data: CVData): string {
   /* ── Certifications ── */
   .cert {
     margin-bottom: 6pt;
-    font-size: 14pt;
+    font-size: 9.5pt;
     page-break-inside: avoid;
   }
 
   .cert__name { font-weight: 600; color: #111827; }
   .cert__org { color: #4b5563; }
-  .cert__date { color: #6b7280; font-size: 13pt; }
+  .cert__date { color: #6b7280; font-size: 9pt; }
 
   /* ── Interests ── */
-  .interests { font-size: 14pt; color: #374151; }
+  .interests { font-size: 9.5pt; color: #374151; }
 
   .ats-hidden {
     color: #ffffff;
@@ -458,6 +497,7 @@ function generateClassicCVHTML(data: CVData): string {
         <span class="entry__dates">${dateRange(exp.startDate, exp.endDate, exp.current)}</span>
       </div>
       ${exp.description ? `<div class="entry__desc">${descriptionToHtml(exp.description)}</div>` : ''}
+      ${[...(exp.technicalSkills || []), ...(exp.tools || [])].length > 0 ? `<div class="entry__skills">${[...(exp.technicalSkills || []), ...(exp.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
       ${exp.projectLink ? `<div class="entry__link"><a href="${esc(exp.projectLink)}">Voir le projet</a></div>` : ''}
     </div>`;
     }).join('')}
@@ -475,6 +515,7 @@ function generateClassicCVHTML(data: CVData): string {
         <span class="entry__dates">${dateRange(proj.startDate, proj.endDate)}</span>
       </div>
       ${proj.description ? `<div class="entry__desc">${descriptionToHtml(proj.description)}</div>` : ''}
+      ${[...(proj.technicalSkills || []), ...(proj.tools || [])].length > 0 ? `<div class="entry__skills">${[...(proj.technicalSkills || []), ...(proj.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
       ${proj.url ? `<div class="entry__link"><a href="${esc(proj.url)}">${cleanUrl(proj.url)}</a></div>` : ''}
     </div>`;
     }).join('')}
@@ -493,6 +534,7 @@ function generateClassicCVHTML(data: CVData): string {
         <span class="entry__dates">${dateRange(edu.startDate, edu.endDate)}</span>
       </div>
       ${edu.specialty ? `<div class="entry__sub">${esc(edu.specialty)}</div>` : ''}
+      ${[...(edu.technicalSkills || []), ...(edu.tools || [])].length > 0 ? `<div class="entry__skills">${[...(edu.technicalSkills || []), ...(edu.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
     </div>`;
     }).join('')}
   </div>` : ''}
@@ -727,6 +769,15 @@ function generateCreativeCVHTML(data: CVData): string {
 
   .timeline-link a { color: var(--accent); }
 
+  .timeline-skills {
+    margin-top: 3pt;
+    font-size: var(--font-xs);
+    color: #94a3b8;
+  }
+
+  .timeline-skills span { display: inline; }
+  .timeline-skills span:not(:last-child)::after { content: " · "; color: #64748b; }
+
   /* Tech grid */
   .tech-grid {
     display: flex;
@@ -940,6 +991,7 @@ function generateCreativeCVHTML(data: CVData): string {
         <div class="timeline-title">${esc(exp.position)}</div>
         ${loc ? `<div class="timeline-sub">${esc(loc)}</div>` : ''}
         ${exp.description ? `<div class="timeline-desc">${descriptionToHtml(exp.description)}</div>` : ''}
+        ${[...(exp.technicalSkills || []), ...(exp.tools || [])].length > 0 ? `<div class="timeline-skills">${[...(exp.technicalSkills || []), ...(exp.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
         ${exp.projectLink ? `<div class="timeline-link"><a href="${esc(exp.projectLink)}">Voir le projet</a></div>` : ''}
       </div>`;
       }).join('')}
@@ -953,6 +1005,7 @@ function generateCreativeCVHTML(data: CVData): string {
         <div class="timeline-date">${dateRange(proj.startDate, proj.endDate)}</div>
         <div class="timeline-title">${esc(proj.name)}</div>
         ${proj.description ? `<div class="timeline-desc">${descriptionToHtml(proj.description)}</div>` : ''}
+        ${[...(proj.technicalSkills || []), ...(proj.tools || [])].length > 0 ? `<div class="timeline-skills">${[...(proj.technicalSkills || []), ...(proj.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
         ${proj.url ? `<div class="timeline-link"><a href="${esc(proj.url)}">${cleanUrl(proj.url)}</a></div>` : ''}
       </div>`).join('')}
     </div>` : ''}
@@ -968,6 +1021,7 @@ function generateCreativeCVHTML(data: CVData): string {
         <div class="timeline-title">${esc(edu.degree)}</div>
         ${loc ? `<div class="timeline-sub">${esc(loc)}</div>` : ''}
         ${edu.specialty ? `<div class="timeline-sub">${esc(edu.specialty)}</div>` : ''}
+        ${[...(edu.technicalSkills || []), ...(edu.tools || [])].length > 0 ? `<div class="timeline-skills">${[...(edu.technicalSkills || []), ...(edu.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
       </div>`;
       }).join('')}
     </div>` : ''}

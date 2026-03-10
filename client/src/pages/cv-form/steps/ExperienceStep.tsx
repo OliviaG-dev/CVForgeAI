@@ -88,7 +88,17 @@ export default function ExperienceStep({ data, onChange }: Props) {
   const remove = (id: string) => onChange(data.filter((e) => e.id !== id));
 
   const update = (id: string, field: keyof Experience, value: string | boolean) => {
-    onChange(data.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
+    onChange(data.map((e) => {
+      if (e.id !== id) return e;
+      const next = { ...e, [field]: value };
+      if (field === 'startDate' && typeof value === 'string' && value && e.endDate && e.endDate < value) {
+        next.endDate = value;
+      }
+      if (field === 'endDate' && typeof value === 'string' && value && e.startDate && value < e.startDate) {
+        return e;
+      }
+      return next;
+    }));
   };
 
   const updateSkills = (id: string, field: 'technicalSkills' | 'tools' | 'softSkills', value: string[]) => {
@@ -170,6 +180,7 @@ export default function ExperienceStep({ data, onChange }: Props) {
                 value={exp.endDate}
                 onChange={(e) => update(exp.id, 'endDate', e.target.value)}
                 disabled={exp.current}
+                min={exp.startDate || undefined}
               />
             </label>
           </div>
