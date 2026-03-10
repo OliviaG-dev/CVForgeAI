@@ -148,10 +148,10 @@ function computeCreativeContentDensity(data: CVData): { density: CreativeDensity
     data.languages.length + data.certifications.length + data.interests.length +
     Math.floor(descLen / 80);
   let density: CreativeDensity;
-  if (score < 12) density = 'sparse';
-  else if (score < 25) density = 'low';
-  else if (score < 45) density = 'medium';
-  else if (score < 70) density = 'dense';
+  if (score < 8) density = 'sparse';
+  else if (score < 18) density = 'low';
+  else if (score < 35) density = 'medium';
+  else if (score < 55) density = 'dense';
   else density = 'compact';
   return { density, score };
 }
@@ -576,24 +576,24 @@ function generateClassicCVHTML(data: CVData): string {
 function getCreativeDensityVars(density: CreativeDensity): string {
   const vars: Record<CreativeDensity, Record<string, string>> = {
     sparse: {
-      '--pad-v': '40pt', '--pad-h': '30pt', '--gap': '28pt', '--timeline-mb': '20pt', '--label-mb': '14pt', '--inner-gap': '8pt', '--line-ht': '1.5',
-      '--font-base': '10.5pt', '--font-sm': '9.5pt', '--font-xs': '9pt', '--font-title': '22pt', '--font-subtitle': '13pt',
+      '--pad-v': '24pt', '--pad-h': '18pt', '--gap': '22pt', '--timeline-mb': '12pt', '--label-mb': '8pt', '--inner-gap': '5pt', '--line-ht': '1.5',
+      '--font-base': '9.5pt', '--font-sm': '8.5pt', '--font-xs': '8pt', '--font-title': '20pt', '--font-subtitle': '11pt',
     },
     low: {
-      '--pad-v': '30pt', '--pad-h': '22pt', '--gap': '20pt', '--timeline-mb': '14pt', '--label-mb': '10pt', '--inner-gap': '6pt', '--line-ht': '1.5',
-      '--font-base': '9.5pt', '--font-sm': '8.5pt', '--font-xs': '8pt', '--font-title': '19pt', '--font-subtitle': '11pt',
+      '--pad-v': '20pt', '--pad-h': '16pt', '--gap': '18pt', '--timeline-mb': '10pt', '--label-mb': '7pt', '--inner-gap': '5pt', '--line-ht': '1.48',
+      '--font-base': '9pt', '--font-sm': '8pt', '--font-xs': '7.5pt', '--font-title': '18pt', '--font-subtitle': '10pt',
     },
     medium: {
-      '--pad-v': '22pt', '--pad-h': '16pt', '--gap': '14pt', '--timeline-mb': '10pt', '--label-mb': '8pt', '--inner-gap': '5pt', '--line-ht': '1.5',
-      '--font-base': '9pt', '--font-sm': '8pt', '--font-xs': '7.5pt', '--font-title': '17pt', '--font-subtitle': '10pt',
+      '--pad-v': '16pt', '--pad-h': '14pt', '--gap': '16pt', '--timeline-mb': '8pt', '--label-mb': '6pt', '--inner-gap': '4pt', '--line-ht': '1.45',
+      '--font-base': '8.5pt', '--font-sm': '7.5pt', '--font-xs': '7pt', '--font-title': '16pt', '--font-subtitle': '9pt',
     },
     dense: {
-      '--pad-v': '18pt', '--pad-h': '14pt', '--gap': '14pt', '--timeline-mb': '8pt', '--label-mb': '7pt', '--inner-gap': '5pt', '--line-ht': '1.55',
-      '--font-base': '9pt', '--font-sm': '8pt', '--font-xs': '7.5pt', '--font-title': '17pt', '--font-subtitle': '10pt',
+      '--pad-v': '14pt', '--pad-h': '12pt', '--gap': '14pt', '--timeline-mb': '6pt', '--label-mb': '5pt', '--inner-gap': '4pt', '--line-ht': '1.4',
+      '--font-base': '8pt', '--font-sm': '7pt', '--font-xs': '6.5pt', '--font-title': '15pt', '--font-subtitle': '8.5pt',
     },
     compact: {
-      '--pad-v': '14pt', '--pad-h': '10pt', '--gap': '10pt', '--timeline-mb': '6pt', '--label-mb': '6pt', '--inner-gap': '4pt', '--line-ht': '1.5',
-      '--font-base': '8.5pt', '--font-sm': '7.5pt', '--font-xs': '7pt', '--font-title': '15pt', '--font-subtitle': '9pt',
+      '--pad-v': '12pt', '--pad-h': '10pt', '--gap': '12pt', '--timeline-mb': '5pt', '--label-mb': '4pt', '--inner-gap': '3pt', '--line-ht': '1.35',
+      '--font-base': '7.5pt', '--font-sm': '6.5pt', '--font-xs': '6pt', '--font-title': '14pt', '--font-subtitle': '8pt',
     },
   };
   return Object.entries(vars[density]).map(([k, v]) => `${k}: ${v}`).join('; ');
@@ -683,7 +683,6 @@ function generateCreativeCVHTML(data: CVData): string {
     flex-direction: column;
     gap: var(--gap);
     overflow: hidden;
-    justify-content: space-between;
   }
 
   .left > div {
@@ -698,7 +697,7 @@ function generateCreativeCVHTML(data: CVData): string {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2pt;
-    padding: 3pt 10pt;
+    padding: 3pt 8pt;
     border-radius: 3pt;
     margin-bottom: var(--label-mb);
   }
@@ -706,7 +705,7 @@ function generateCreativeCVHTML(data: CVData): string {
   /* Experiences / Education timeline */
   .timeline-item {
     margin-bottom: var(--timeline-mb);
-    padding-left: 10pt;
+    padding-left: 8pt;
     border-left: 1.5pt solid rgba(255,255,255,0.12);
     page-break-inside: avoid;
     min-width: 0;
@@ -721,7 +720,7 @@ function generateCreativeCVHTML(data: CVData): string {
     font-size: var(--font-xs);
     font-weight: 700;
     color: var(--accent);
-    margin-bottom: 1pt;
+    margin-bottom: 2pt;
   }
 
   .timeline-title {
@@ -740,7 +739,7 @@ function generateCreativeCVHTML(data: CVData): string {
   }
 
   .timeline-desc {
-    margin-top: 3pt;
+    margin-top: 2pt;
     font-size: var(--font-sm);
     color: #cbd5e1;
     line-height: var(--line-ht);
@@ -764,7 +763,7 @@ function generateCreativeCVHTML(data: CVData): string {
 
   .timeline-link {
     font-size: var(--font-xs);
-    margin-top: 2pt;
+    margin-top: 1pt;
   }
 
   .timeline-link a { color: var(--accent); }
@@ -790,7 +789,7 @@ function generateCreativeCVHTML(data: CVData): string {
     background: var(--dark-lighter);
     border: 1pt solid rgba(255,255,255,0.08);
     color: #e2e8f0;
-    padding: 3pt 8pt;
+    padding: 2pt 6pt;
     border-radius: 4pt;
     font-size: var(--font-sm);
     font-weight: 500;
@@ -820,19 +819,18 @@ function generateCreativeCVHTML(data: CVData): string {
     display: flex;
     flex-direction: column;
     gap: var(--gap);
-    justify-content: space-between;
   }
 
   /* Photo + identity */
-  .identity { text-align: center; margin-bottom: 4pt; }
+  .identity { text-align: center; margin-bottom: 2pt; }
 
   .identity__photo {
-    width: 90pt;
-    height: 90pt;
+    width: 70pt;
+    height: 70pt;
     border-radius: 50%;
     object-fit: cover;
     border: 3pt solid var(--accent);
-    margin: 0 auto 10pt;
+    margin: 0 auto 8pt;
     display: block;
   }
 
@@ -867,8 +865,8 @@ function generateCreativeCVHTML(data: CVData): string {
     font-size: var(--font-xs);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1.5pt;
-    padding: 2.5pt 8pt;
+    letter-spacing: 1pt;
+    padding: 2pt 6pt;
     border-radius: 3pt;
     margin-bottom: var(--label-mb);
   }
@@ -877,11 +875,11 @@ function generateCreativeCVHTML(data: CVData): string {
   .profile-box {
     background: #f8fafc;
     border: 1pt solid #e5e7eb;
-    border-radius: 8pt;
+    border-radius: 6pt;
     padding: calc(var(--inner-gap) + 4pt);
     font-size: var(--font-base);
     color: #374151;
-    line-height: 1.6;
+    line-height: 1.55;
   }
 
   /* Contact */
@@ -919,6 +917,26 @@ function generateCreativeCVHTML(data: CVData): string {
   }
   .r-cert__name { font-weight: 600; color: #111827; font-size: var(--font-sm); }
   .r-cert__org { color: #6b7280; font-size: var(--font-xs); }
+
+  /* Technologies (right column) */
+  .r-tech-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--inner-gap);
+    min-width: 0;
+  }
+
+  .r-tech-tag {
+    background: #f1f5f9;
+    border: 1pt solid #e2e8f0;
+    color: #374151;
+    padding: 2pt 6pt;
+    border-radius: 4pt;
+    font-size: var(--font-sm);
+    font-weight: 500;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
 
   /* Soft skills (right column) */
   .r-soft-grid {
@@ -1026,13 +1044,6 @@ function generateCreativeCVHTML(data: CVData): string {
       }).join('')}
     </div>` : ''}
 
-    ${hasTech ? `
-    <div>
-      <div class="section-label">Technologies</div>
-      <div class="tech-grid">
-        ${[...technicalSkills, ...tools].map(s => `<span class="tech-tag">${esc(s)}</span>`).join('')}
-      </div>
-    </div>` : ''}
   </div>
 
   <!-- Right column -->
@@ -1047,6 +1058,14 @@ function generateCreativeCVHTML(data: CVData): string {
     <div class="r-section">
       <div class="r-section__label">Profil</div>
       <div class="profile-box">${esc(p.summary)}</div>
+    </div>` : ''}
+
+    ${hasTech ? `
+    <div class="r-section">
+      <div class="r-section__label">Technologies</div>
+      <div class="r-tech-grid">
+        ${[...technicalSkills, ...tools].map(s => `<span class="r-tech-tag">${esc(s)}</span>`).join('')}
+      </div>
     </div>` : ''}
 
     ${contactItems.length > 0 ? `
