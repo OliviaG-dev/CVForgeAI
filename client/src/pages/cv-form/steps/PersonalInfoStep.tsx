@@ -1,5 +1,7 @@
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
 import type { PersonalInfo } from '../../../types/cv';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface Props {
   data: PersonalInfo;
@@ -32,6 +34,7 @@ function resizeImage(file: File, maxSize: number): Promise<string> {
 
 export default function PersonalInfoStep({ data, onChange }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [improving, setImproving] = useState(false);
 
   const update = (field: keyof PersonalInfo, value: string) => {
     onChange({ ...data, [field]: value });
@@ -42,6 +45,26 @@ export default function PersonalInfoStep({ data, onChange }: Props) {
     if (!file) return;
     const base64 = await resizeImage(file, 300);
     onChange({ ...data, photo: base64 });
+  };
+
+  const handleImproveSummary = async () => {
+    const text = (data.summary || '').trim();
+    if (!text) return;
+    setImproving(true);
+    try {
+      const res = await fetch(`${API_URL}/api/cv/improve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: text }),
+      });
+      if (!res.ok) throw new Error('Erreur serveur');
+      const { improved } = await res.json();
+      if (improved) onChange({ ...data, summary: improved });
+    } catch (err) {
+      console.error('Erreur amélioration résumé:', err);
+    } finally {
+      setImproving(false);
+    }
   };
 
   return (
@@ -113,7 +136,29 @@ export default function PersonalInfoStep({ data, onChange }: Props) {
         </label>
 
         <label className="step__field">
-          <span className="step__label">Résumé / Présentation</span>
+          <div className="step__field-header">
+            <span className="step__label">Résumé / Présentation</span>
+            {improving && (
+              <span className="step__improve-loading-text">Reformulation IA en cours…</span>
+            )}
+            <button
+              type="button"
+              className={`step__improve-btn${improving ? ' step__improve-btn--loading' : ''}`}
+              onClick={handleImproveSummary}
+              disabled={improving || !data.summary?.trim()}
+              title="Améliorer le texte avec l'IA"
+            >
+              {improving ? (
+                <span className="step__improve-btn-loading" aria-label="Chargement en cours">
+                  <span className="step__improve-btn-dot" />
+                  <span className="step__improve-btn-dot" />
+                  <span className="step__improve-btn-dot" />
+                </span>
+              ) : (
+                "Améliorer avec l'IA"
+              )}
+            </button>
+          </div>
           <textarea
             className="step__textarea"
             value={data.summary}

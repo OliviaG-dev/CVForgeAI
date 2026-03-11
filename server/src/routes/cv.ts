@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { generateCV, improveDescription } from '../services/openai.js';
+import { generateCV, improveDescription } from '../services/ai.js';
 import { generateCVHTMLForTemplate } from '../templates/cv.js';
 import { generatePDF } from '../services/pdf.js';
 

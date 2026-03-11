@@ -255,6 +255,7 @@ function generateClassicCVHTML(data: CVData): string {
     margin: 8pt auto 0;
     line-height: 1.55;
     text-align: center;
+    white-space: pre-line;
   }
 
   .header__bar {
@@ -880,6 +881,7 @@ function generateCreativeCVHTML(data: CVData): string {
     font-size: var(--font-base);
     color: #374151;
     line-height: 1.55;
+    white-space: pre-line;
   }
 
   /* Contact */

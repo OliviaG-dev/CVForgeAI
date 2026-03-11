@@ -5,7 +5,7 @@
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
-![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?logo=openai&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google-Gemini%202.5%20Flash-4285F4?logo=google&logoColor=white)
 
 CVForge AI est une application web moderne qui permet de **générer automatiquement un CV professionnel** grâce à l'intelligence artificielle.
 
@@ -25,7 +25,7 @@ L'objectif est de simplifier la création de CV en transformant quelques informa
 |-----------|-------------|
 | Frontend | React, TypeScript, Vite |
 | Backend | Node.js, Express, TypeScript |
-| IA | API OpenAI (GPT-4o-mini) |
+| IA | Google Gemini 2.5 Flash (gratuit) |
 
 ## Structure du projet
 
@@ -50,7 +50,7 @@ cvforge-ai/
 │   │   ├── routes/
 │   │   │   └── cv.ts       # Routes API pour la génération de CV
 │   │   ├── services/
-│   │   │   └── openai.ts   # Intégration OpenAI
+│   │   │   └── ai.ts       # Intégration Google Gemini
 │   │   └── index.ts        # Point d'entrée serveur
 │   ├── .env.example
 │   ├── tsconfig.json
@@ -72,7 +72,8 @@ npm run install:all
 
 # Configurer les variables d'environnement du serveur
 cp server/.env.example server/.env
-# Puis ajouter votre clé API OpenAI dans server/.env
+# Puis ajouter votre clé API Gemini dans server/.env
+# Obtenir une clé gratuite : https://aistudio.google.com/apikey
 ```
 
 ## Lancement
