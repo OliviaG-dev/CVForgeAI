@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import type { CVData, PersonalInfo, Experience, Project, Education, Language, Certification, AccentColor, CVTemplate } from '../../types/cv';
 import { emptyCVData } from '../../types/cv';
@@ -27,6 +28,7 @@ export default function CVForm() {
   const [data, setData] = useState<CVData>(emptyCVData);
   const [generating, setGenerating] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const updateData = <K extends keyof CVData>(key: K, value: CVData[K]) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -91,6 +93,7 @@ export default function CVForm() {
 
   const handlePreview = async () => {
     setPreviewing(true);
+    setPreviewUrl(null);
     try {
       const res = await fetch(`${API_URL}/api/cv/pdf`, {
         method: 'POST',
@@ -100,13 +103,29 @@ export default function CVForm() {
       if (!res.ok) throw new Error('Erreur serveur');
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      setPreviewUrl(url);
     } catch (err) {
       console.error('Erreur aperçu PDF:', err);
     } finally {
       setPreviewing(false);
     }
   };
+
+  const closePreviewModal = useCallback(() => {
+    setPreviewUrl((url) => {
+      if (url) URL.revokeObjectURL(url);
+      return null;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!previewUrl) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closePreviewModal();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [previewUrl, closePreviewModal]);
 
   const handleSubmit = async () => {
     setGenerating(true);
@@ -262,7 +281,6 @@ export default function CVForm() {
             disabled={generating}
           >
             {generating ? 'Génération en cours...' : 'Générer mon CV'}
-            {!generating && <span className="cvform__btn-icon">&#10024;</span>}
           </button>
         ) : (
           <button
@@ -275,6 +293,37 @@ export default function CVForm() {
           </button>
         )}
       </footer>
+
+      {previewUrl &&
+        createPortal(
+          <div
+            className="cvform__preview-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Aperçu du CV"
+            onClick={closePreviewModal}
+          >
+            <div
+              className="cvform__preview-modal-content"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <iframe
+                src={previewUrl}
+                title="Aperçu du CV"
+                className="cvform__preview-modal-iframe"
+              />
+              <button
+                type="button"
+                className="cvform__preview-modal-close"
+                onClick={closePreviewModal}
+                aria-label="Fermer l'aperçu"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
     </main>
   );
 }

@@ -344,20 +344,145 @@
   flex-shrink: 0;
 }
 
-.cvform__btn--generate {
-  background: linear-gradient(135deg, #646cff, #818cf8);
-  border: none;
-  color: #fff;
-  padding: 0.7rem 1.8rem;
-  font-size: 0.92rem;
+/* ─── Preview modal ─── */
+
+.cvform__preview-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  animation: cvform-modal-fade-in 0.25s ease-out;
 }
 
-.cvform__btn--generate:hover {
-  background: linear-gradient(135deg, #535bf2, #7c83f7);
+@keyframes cvform-modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.cvform__preview-modal-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  height: 98vh;
+  max-height: 98vh;
+  background: #1e293b;
+  border-radius: 16px;
   box-shadow:
-    0 4px 24px rgba(100, 108, 255, 0.35),
-    0 0 40px rgba(100, 108, 255, 0.15);
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  animation: cvform-modal-scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cvform-modal-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cvform__preview-modal-close {
+  flex-shrink: 0;
+  align-self: center;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.5rem 1.25rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cvform__preview-modal-close:hover {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #f87171;
+}
+
+.cvform__preview-modal-iframe {
+  width: 100%;
+  flex: 1;
+  min-height: 70vh;
+  border: none;
+  display: block;
+}
+
+.cvform__btn--generate {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    rgba(100, 108, 255, 0.25) 0%,
+    rgba(129, 140, 248, 0.2) 100%
+  );
+  background-size: 200% 200%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e0e7ff;
+  padding: 0.75rem 2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  box-shadow: 0 1px 8px rgba(100, 108, 255, 0.08);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cvform__btn--generate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.cvform__btn--generate:hover:not(:disabled) {
+  background-position: 100% 0;
+  background: linear-gradient(
+    135deg,
+    rgba(100, 108, 255, 0.32) 0%,
+    rgba(129, 140, 248, 0.25) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 20px rgba(100, 108, 255, 0.12);
   transform: translateY(-2px);
+}
+
+.cvform__btn--generate:hover:not(:disabled)::before {
+  transform: translateX(100%);
+}
+
+.cvform__btn--generate:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 8px rgba(100, 108, 255, 0.06);
+}
+
+.cvform__btn--generate:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
 }
 
 /* ─── Photo upload ─── */

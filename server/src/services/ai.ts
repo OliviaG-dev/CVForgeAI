@@ -53,7 +53,7 @@ export async function improveDescription(description: string): Promise<string> {
 
 STYLE : Texte commercial et professionnel, percutant, optimisé pour les systèmes ATS. Ton valorisant et engageant.
 
-MISE EN FORME : Utilise des retours à la ligne pour aérer le texte et structurer les idées. Sépare les paragraphes par des lignes vides pour une lecture fluide. Maximum 3-4 lignes par paragraphe.
+MISE EN FORME : Utilise des retours à la ligne pour aérer le texte et structurer les idées. Sépare les paragraphes par une ligne vide pour une lecture fluide. Maximum 3-4 lignes par paragraphe.
 
 RÈGLE : Retourne UNIQUEMENT le texte amélioré, rien d'autre. Pas d'options multiples, pas d'explications, pas de markdown (###, ---). Juste le résumé formaté avec des sauts de ligne.
 

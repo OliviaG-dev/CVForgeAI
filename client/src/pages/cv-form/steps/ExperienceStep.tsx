@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { Experience } from '../../../types/cv';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 interface Props {
   data: Experience[];
   onChange: (data: Experience[]) => void;
@@ -83,9 +85,34 @@ function sortByDateDesc(items: Experience[]): Experience[] {
 }
 
 export default function ExperienceStep({ data, onChange }: Props) {
+  const [improvingId, setImprovingId] = useState<string | null>(null);
+
   const add = () => onChange([...data, emptyExperience()]);
 
   const remove = (id: string) => onChange(data.filter((e) => e.id !== id));
+
+  const handleImproveDescription = async (id: string) => {
+    const exp = data.find((e) => e.id === id);
+    const text = (exp?.description || '').trim();
+    if (!text) return;
+    setImprovingId(id);
+    try {
+      const res = await fetch(`${API_URL}/api/cv/improve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: text }),
+      });
+      if (!res.ok) throw new Error('Erreur serveur');
+      const { improved } = await res.json();
+      if (improved) {
+        onChange(data.map((e) => (e.id === id ? { ...e, description: improved } : e)));
+      }
+    } catch (err) {
+      console.error('Erreur amélioration description:', err);
+    } finally {
+      setImprovingId(null);
+    }
+  };
 
   const update = (id: string, field: keyof Experience, value: string | boolean) => {
     onChange(data.map((e) => {
@@ -195,7 +222,29 @@ export default function ExperienceStep({ data, onChange }: Props) {
           </label>
 
           <label className="step__field">
-            <span className="step__label">Description des missions</span>
+            <div className="step__field-header">
+              <span className="step__label">Description des missions</span>
+              {improvingId === exp.id && (
+                <span className="step__improve-loading-text">Reformulation IA en cours…</span>
+              )}
+              <button
+                type="button"
+                className={`step__improve-btn${improvingId === exp.id ? ' step__improve-btn--loading' : ''}`}
+                onClick={() => handleImproveDescription(exp.id)}
+                disabled={improvingId !== null || !exp.description?.trim()}
+                title="Améliorer le texte avec l'IA"
+              >
+                {improvingId === exp.id ? (
+                  <span className="step__improve-btn-loading" aria-label="Chargement en cours">
+                    <span className="step__improve-btn-dot" />
+                    <span className="step__improve-btn-dot" />
+                    <span className="step__improve-btn-dot" />
+                  </span>
+                ) : (
+                  "Améliorer avec l'IA"
+                )}
+              </button>
+            </div>
             <textarea
               className="step__textarea"
               value={exp.description}

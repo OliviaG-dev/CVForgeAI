@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { Project } from '../../../types/cv';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 interface Props {
   data: Project[];
   onChange: (data: Project[]) => void;
@@ -79,10 +81,34 @@ function sortByDateDesc(items: Project[]): Project[] {
 
 export default function ProjectStep({ data, onChange }: Props) {
   const [autoSort, setAutoSort] = useState(true);
+  const [improvingId, setImprovingId] = useState<string | null>(null);
 
   const add = () => onChange([...data, emptyProject()]);
 
   const remove = (id: string) => onChange(data.filter((p) => p.id !== id));
+
+  const handleImproveDescription = async (id: string) => {
+    const proj = data.find((p) => p.id === id);
+    const text = (proj?.description || '').trim();
+    if (!text) return;
+    setImprovingId(id);
+    try {
+      const res = await fetch(`${API_URL}/api/cv/improve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: text }),
+      });
+      if (!res.ok) throw new Error('Erreur serveur');
+      const { improved } = await res.json();
+      if (improved) {
+        onChange(data.map((p) => (p.id === id ? { ...p, description: improved } : p)));
+      }
+    } catch (err) {
+      console.error('Erreur amélioration description:', err);
+    } finally {
+      setImprovingId(null);
+    }
+  };
 
   const update = (id: string, field: keyof Project, value: string) => {
     onChange(data.map((p) => {
@@ -149,7 +175,29 @@ export default function ProjectStep({ data, onChange }: Props) {
           </label>
 
           <label className="step__field">
-            <span className="step__label">Description</span>
+            <div className="step__field-header">
+              <span className="step__label">Description</span>
+              {improvingId === proj.id && (
+                <span className="step__improve-loading-text">Reformulation IA en cours…</span>
+              )}
+              <button
+                type="button"
+                className={`step__improve-btn${improvingId === proj.id ? ' step__improve-btn--loading' : ''}`}
+                onClick={() => handleImproveDescription(proj.id)}
+                disabled={improvingId !== null || !proj.description?.trim()}
+                title="Améliorer le texte avec l'IA"
+              >
+                {improvingId === proj.id ? (
+                  <span className="step__improve-btn-loading" aria-label="Chargement en cours">
+                    <span className="step__improve-btn-dot" />
+                    <span className="step__improve-btn-dot" />
+                    <span className="step__improve-btn-dot" />
+                  </span>
+                ) : (
+                  "Améliorer avec l'IA"
+                )}
+              </button>
+            </div>
             <textarea
               className="step__textarea"
               value={proj.description}
