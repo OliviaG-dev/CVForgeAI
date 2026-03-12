@@ -20,7 +20,7 @@ const STEPS = [
   { label: 'Extras', key: 'extras' },
 ] as const;
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://cvforgeai.onrender.com' : 'http://localhost:3001');
 
 export default function CVForm() {
   const navigate = useNavigate();

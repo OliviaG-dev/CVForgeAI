@@ -8,7 +8,16 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'] }));
+app.use(cors({
+  origin: (origin, cb) => {
+    const allowed = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
+    if (!origin || allowed.includes(origin) || /^https:\/\/.*\.vercel\.app$/.test(origin)) {
+      cb(null, true);
+    } else {
+      cb(null, false);
+    }
+  },
+}));
 app.use(express.json());
 
 app.use('/api/cv', cvRouter);
