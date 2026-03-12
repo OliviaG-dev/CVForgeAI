@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { generateCV, improveDescription } from '../services/ai.js';
 import { generateCVHTMLForTemplate } from '../templates/cv.js';
 import { generatePDF } from '../services/pdf.js';
 
 export const cvRouter = Router();
 
-cvRouter.post('/generate', async (req, res) => {
+cvRouter.post('/generate', async (req: Request, res: Response) => {
   try {
     const { experience, skills, education, language } = req.body;
     const cv = await generateCV({ experience, skills, education, language });
@@ -16,7 +16,7 @@ cvRouter.post('/generate', async (req, res) => {
   }
 });
 
-cvRouter.post('/improve', async (req, res) => {
+cvRouter.post('/improve', async (req: Request, res: Response) => {
   try {
     const { description } = req.body;
     const improved = await improveDescription(description);
@@ -27,7 +27,7 @@ cvRouter.post('/improve', async (req, res) => {
   }
 });
 
-cvRouter.post('/pdf', async (req, res) => {
+cvRouter.post('/pdf', async (req: Request, res: Response) => {
   try {
     const html = generateCVHTMLForTemplate(req.body);
     const pdf = await generatePDF(html, { noMargins: req.body.template === 'creative' });
