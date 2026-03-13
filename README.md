@@ -6,6 +6,7 @@
 ![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
 ![Google Gemini](https://img.shields.io/badge/Google-Gemini%202.5%20Flash-4285F4?logo=google&logoColor=white)
+![Puppeteer](https://img.shields.io/badge/Puppeteer-24-00D9FF?logo=puppeteer&logoColor=white)
 
 CVForge AI est une application web moderne qui permet de **générer automatiquement un CV professionnel** grâce à l'intelligence artificielle.
 
@@ -17,7 +18,7 @@ L'objectif est de simplifier la création de CV en transformant quelques informa
 - **Prévisualisation en temps réel** : visualisez votre CV au fur et à mesure de la saisie.
 - **Amélioration intelligente** : reformulation des expériences professionnelles pour les rendre plus percutantes.
 - **Adaptation à une offre d'emploi** : optimisez votre CV pour une offre spécifique et les systèmes ATS.
-- **Export PDF** : téléchargez votre CV dans un format propre et professionnel.
+- **Export PDF** : téléchargez votre CV dans un format propre et professionnel (Puppeteer).
 
 ## Technologies
 
@@ -26,6 +27,7 @@ L'objectif est de simplifier la création de CV en transformant quelques informa
 | Frontend | React, TypeScript, Vite |
 | Backend | Node.js, Express, TypeScript |
 | IA | Google Gemini 2.5 Flash (gratuit) |
+| PDF | Puppeteer (Chrome headless) |
 
 ## Structure du projet
 
@@ -36,7 +38,8 @@ cvforge-ai/
 │   │   ├── components/
 │   │   │   └── icons/      # Composants SVG (icônes)
 │   │   ├── pages/
-│   │   │   └── home/       # Page d'accueil
+│   │   │   ├── home/       # Page d'accueil
+│   │   │   └── cv-form/    # Formulaire et aperçu CV
 │   │   ├── App.tsx
 │   │   ├── main.tsx
 │   │   └── index.css
@@ -48,10 +51,14 @@ cvforge-ai/
 ├── server/                 # Backend Express
 │   ├── src/
 │   │   ├── routes/
-│   │   │   └── cv.ts       # Routes API pour la génération de CV
+│   │   │   └── cv.ts       # Routes API (génération, amélioration, PDF)
 │   │   ├── services/
-│   │   │   └── ai.ts       # Intégration Google Gemini
+│   │   │   ├── ai.ts       # Intégration Google Gemini
+│   │   │   └── pdf.ts      # Génération PDF (Puppeteer)
+│   │   ├── templates/
+│   │   │   └── cv.ts       # Templates HTML des CV
 │   │   └── index.ts        # Point d'entrée serveur
+│   ├── puppeteer.config.cjs  # Config cache Chrome (Render)
 │   ├── .env.example
 │   ├── tsconfig.json
 │   └── package.json
@@ -69,6 +76,9 @@ cd cvforge-ai
 
 # Installer toutes les dépendances (racine + client + server)
 npm run install:all
+
+# Installer Chrome pour Puppeteer (requis pour l'aperçu et l'export PDF)
+cd server && npx puppeteer browsers install chrome && cd ..
 
 # Configurer les variables d'environnement du serveur
 cp server/.env.example server/.env
@@ -94,6 +104,7 @@ npm run dev:server    # Backend sur http://localhost:3001
 | `GET` | `/api/health` | Vérifier que le serveur fonctionne |
 | `POST` | `/api/cv/generate` | Générer un CV complet |
 | `POST` | `/api/cv/improve` | Améliorer une description |
+| `POST` | `/api/cv/pdf` | Générer et télécharger le CV en PDF |
 
 ## Scripts disponibles
 
@@ -105,6 +116,16 @@ npm run dev:server    # Backend sur http://localhost:3001
 | `npm run build` | Build de production du client |
 | `npm run install:all` | Installe les dépendances client et serveur |
 
+Pour le serveur : `npm run build --prefix server` (installe Chrome + compile TypeScript).
+
+## Déploiement (Render)
+
+Le projet est configuré pour Render.com. Le fichier `puppeteer.config.cjs` stocke Chrome dans le projet pour que le PDF fonctionne en production.
+
+- **Root Directory** : `server` (si service backend séparé)
+- **Build Command** : `npm install && npm run build`
+- **Start Command** : `npm run start`
+
 ## Objectif du projet
 
 CVForge AI est un projet portfolio conçu pour démontrer :
@@ -112,6 +133,7 @@ CVForge AI est un projet portfolio conçu pour démontrer :
 - L'intégration d'une API d'intelligence artificielle
 - La conception d'une application web moderne
 - La structuration d'un projet full-stack en monorepo
+- La génération de PDF côté serveur avec Puppeteer
 
 ## Licence
 
