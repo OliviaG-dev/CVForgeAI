@@ -2,3 +2,6 @@ node_modules
 dist
 .env
 *.local
+
+# Cache Puppeteer (Chrome) - créé lors du build sur Render
+server/.cache
