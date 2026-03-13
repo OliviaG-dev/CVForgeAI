@@ -344,6 +344,20 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 768px) {
+  .cvform__btn--preview .cvform__btn-text,
+  .cvform__btn--secondary .cvform__btn-text,
+  .cvform__btn--next .cvform__btn-text {
+    display: none;
+  }
+
+  .cvform__btn--preview,
+  .cvform__btn--secondary,
+  .cvform__btn--next {
+    padding: 0.55rem;
+  }
+}
+
 /* ─── Preview modal ─── */
 
 .cvform__preview-modal {

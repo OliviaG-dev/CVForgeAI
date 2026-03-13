@@ -268,18 +268,20 @@ export default function CVForm() {
           className="cvform__btn cvform__btn--secondary"
           onClick={prev}
           disabled={currentStep === 0}
+          aria-label="Précédent"
         >
           <span className="cvform__btn-arrow">&#8592;</span>
-          Précédent
+          <span className="cvform__btn-text">Précédent</span>
         </button>
         <button
           type="button"
           className="cvform__btn cvform__btn--preview"
           onClick={handlePreview}
           disabled={previewing}
+          aria-label={previewing ? 'Chargement...' : 'Aperçu'}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          {previewing ? 'Chargement...' : 'Aperçu'}
+          <span className="cvform__btn-text">{previewing ? 'Chargement...' : 'Aperçu'}</span>
         </button>
         {isLast ? (
           <button
@@ -293,10 +295,11 @@ export default function CVForm() {
         ) : (
           <button
             type="button"
-            className="cvform__btn cvform__btn--primary"
+            className="cvform__btn cvform__btn--primary cvform__btn--next"
             onClick={next}
+            aria-label="Suivant"
           >
-            Suivant
+            <span className="cvform__btn-text">Suivant</span>
             <span className="cvform__btn-arrow">&#8594;</span>
           </button>
         )}
