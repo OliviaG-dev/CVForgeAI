@@ -100,12 +100,16 @@ export default function CVForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error('Erreur serveur');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Erreur serveur (${res.status})`);
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       setPreviewUrl(url);
     } catch (err) {
       console.error('Erreur aperçu PDF:', err);
+      alert(err instanceof Error ? err.message : 'Erreur lors de l\'aperçu');
     } finally {
       setPreviewing(false);
     }
@@ -136,7 +140,10 @@ export default function CVForm() {
         body: JSON.stringify(data),
       });
 
-      if (!res.ok) throw new Error('Erreur serveur');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Erreur serveur (${res.status})`);
+      }
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -147,6 +154,7 @@ export default function CVForm() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Erreur génération PDF:', err);
+      alert(err instanceof Error ? err.message : 'Erreur lors de la génération');
     } finally {
       setGenerating(false);
     }

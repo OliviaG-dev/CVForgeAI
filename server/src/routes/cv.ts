@@ -42,6 +42,7 @@ cvRouter.post('/pdf', async (req: Request, res: Response) => {
     res.send(pdf);
   } catch (error) {
     console.error('Error generating PDF:', error);
-    res.status(500).json({ error: 'Erreur lors de la génération du PDF' });
+    const message = error instanceof Error ? error.message : 'Erreur lors de la génération du PDF';
+    res.status(500).json({ error: message });
   }
 });
