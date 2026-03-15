@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import type { CVData, PersonalInfo, Experience, Project, Education, Language, Certification, AccentColor, CVTemplate } from '../../types/cv';
 import { emptyCVData } from '../../types/cv';
+import { mergeSkillsUnique } from '../../utils/skills';
 import PersonalInfoStep from './steps/PersonalInfoStep.js';
 import ExperienceStep from './steps/ExperienceStep.js';
 import ProjectStep from './steps/ProjectStep.js';
@@ -29,15 +30,19 @@ export default function CVForm() {
   const [generating, setGenerating] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [coldStartHint, setColdStartHint] = useState(false);
+
+  useEffect(() => {
+    if (!previewing && !generating) {
+      setColdStartHint(false);
+      return;
+    }
+    const t = setTimeout(() => setColdStartHint(true), 5000);
+    return () => clearTimeout(t);
+  }, [previewing, generating]);
 
   const updateData = <K extends keyof CVData>(key: K, value: CVData[K]) => {
     setData((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const mergeUnique = (existing: string[], incoming: string[]) => {
-    const set = new Set(existing);
-    for (const s of incoming) if (!set.has(s)) set.add(s);
-    return set.size === existing.length ? existing : Array.from(set);
   };
 
   const handleExperiencesChange = useCallback((experiences: Experience[]) => {
@@ -49,9 +54,9 @@ export default function CVForm() {
       return {
         ...prev,
         experiences,
-        technicalSkills: mergeUnique(prev.technicalSkills, expTech),
-        tools: mergeUnique(prev.tools, expTools),
-        softSkills: mergeUnique(prev.softSkills, expSoft),
+        technicalSkills: mergeSkillsUnique(prev.technicalSkills, expTech),
+        tools: mergeSkillsUnique(prev.tools, expTools),
+        softSkills: mergeSkillsUnique(prev.softSkills, expSoft),
       };
     });
   }, []);
@@ -65,9 +70,9 @@ export default function CVForm() {
       return {
         ...prev,
         projects,
-        technicalSkills: mergeUnique(prev.technicalSkills, projTech),
-        tools: mergeUnique(prev.tools, projTools),
-        softSkills: mergeUnique(prev.softSkills, projSoft),
+        technicalSkills: mergeSkillsUnique(prev.technicalSkills, projTech),
+        tools: mergeSkillsUnique(prev.tools, projTools),
+        softSkills: mergeSkillsUnique(prev.softSkills, projSoft),
       };
     });
   }, []);
@@ -81,9 +86,9 @@ export default function CVForm() {
       return {
         ...prev,
         education,
-        technicalSkills: mergeUnique(prev.technicalSkills, eduTech),
-        tools: mergeUnique(prev.tools, eduTools),
-        softSkills: mergeUnique(prev.softSkills, eduSoft),
+        technicalSkills: mergeSkillsUnique(prev.technicalSkills, eduTech),
+        tools: mergeSkillsUnique(prev.tools, eduTools),
+        softSkills: mergeSkillsUnique(prev.softSkills, eduSoft),
       };
     });
   }, []);
@@ -197,9 +202,9 @@ export default function CVForm() {
             tools={data.tools}
             softSkills={data.softSkills}
             atsKeywords={data.atsKeywords}
-            onChangeTechnical={(v: string[]) => updateData('technicalSkills', v)}
-            onChangeTools={(v: string[]) => updateData('tools', v)}
-            onChangeSoft={(v: string[]) => updateData('softSkills', v)}
+            onChangeTechnical={(v: string[]) => updateData('technicalSkills', mergeSkillsUnique([], v))}
+            onChangeTools={(v: string[]) => updateData('tools', mergeSkillsUnique([], v))}
+            onChangeSoft={(v: string[]) => updateData('softSkills', mergeSkillsUnique([], v))}
             onChangeAtsKeywords={(v: string) => updateData('atsKeywords', v)}
           />
         );
@@ -226,7 +231,12 @@ export default function CVForm() {
   const isLast = currentStep === STEPS.length - 1;
 
   return (
-    <main className="cvform">
+    <main
+      className="cvform"
+      data-bwignore
+      data-lpignore="true"
+      data-1p-ignore
+    >
       <header className="cvform__header">
         <button type="button" className="cvform__back" onClick={() => navigate('/')}>
           <span className="cvform__back-arrow">&#8592;</span>
@@ -258,10 +268,20 @@ export default function CVForm() {
         ))}
       </nav>
 
-      <div className="cvform__body" key={currentStep}>
+      <form
+        className="cvform__body"
+        key={currentStep}
+        autoComplete="off"
+        onSubmit={(e) => e.preventDefault()}
+      >
         {renderStep()}
-      </div>
+      </form>
 
+      {coldStartHint && (
+        <p className="cvform__cold-start-hint">
+          Première requête : le serveur peut prendre jusqu&apos;à 1 minute à démarrer (hébergement gratuit).
+        </p>
+      )}
       <footer className="cvform__footer">
         <button
           type="button"

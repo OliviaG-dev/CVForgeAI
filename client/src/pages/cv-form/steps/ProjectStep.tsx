@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { ChevronDownIcon, TrashIcon } from '../../../components/icons';
+import DeleteConfirmModal from '../../../components/DeleteConfirmModal';
 import type { Project } from '../../../types/cv';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://cvforgeai.onrender.com' : 'http://localhost:3001');
@@ -68,6 +70,20 @@ function SkillTagInput({ tags, onChange, placeholder }: { tags: string[]; onChan
   );
 }
 
+function formatMonth(ym: string): string {
+  if (!ym) return '';
+  const [y, m] = ym.split('-');
+  const months = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  const mi = parseInt(m || '1', 10) - 1;
+  return `${months[mi] || m} ${y}`;
+}
+
+function formatDateRange(start?: string, end?: string): string {
+  if (!start) return '';
+  if (end) return `${formatMonth(start)} - ${formatMonth(end)}`;
+  return formatMonth(start);
+}
+
 function sortByDateDesc(items: Project[]): Project[] {
   return [...items].sort((a, b) => {
     const dateA = a.startDate || '';
@@ -82,10 +98,43 @@ function sortByDateDesc(items: Project[]): Project[] {
 export default function ProjectStep({ data, onChange }: Props) {
   const [autoSort, setAutoSort] = useState(true);
   const [improvingId, setImprovingId] = useState<string | null>(null);
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const add = () => onChange([...data, emptyProject()]);
+  const toggleOpen = useCallback((id: string) => {
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
-  const remove = (id: string) => onChange(data.filter((p) => p.id !== id));
+  const add = () => {
+    const newProj = emptyProject();
+    onChange([...data, newProj]);
+    setOpenIds((prev) => new Set(prev).add(newProj.id));
+  };
+
+  const remove = (id: string) => {
+    onChange(data.filter((p) => p.id !== id));
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setDeleteConfirmId(null);
+  };
+
+  const projToDelete = deleteConfirmId ? data.find((p) => p.id === deleteConfirmId) : null;
+  const deleteLabel = projToDelete?.name || 'ce projet';
+
+  useEffect(() => {
+    if (!deleteConfirmId) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setDeleteConfirmId(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [deleteConfirmId]);
 
   const handleImproveDescription = async (id: string) => {
     const proj = data.find((p) => p.id === id);
@@ -154,15 +203,38 @@ export default function ProjectStep({ data, onChange }: Props) {
         <p className="step__empty">Aucun projet ajouté.<br/>Cliquez sur &laquo; + Ajouter &raquo; pour commencer.</p>
       )}
 
-      {displayed.map((proj, i) => (
-        <div key={proj.id} className="step__card">
-          <div className="step__card-header">
-            <span className="step__card-number">Projet {i + 1}</span>
-            <button type="button" className="step__remove-btn" onClick={() => remove(proj.id)}>
-              Supprimer
-            </button>
+      {displayed.map((proj, i) => {
+        const isOpen = openIds.has(proj.id);
+        const main = proj.name || `Projet ${i + 1}`;
+        const dates = formatDateRange(proj.startDate, proj.endDate);
+        return (
+        <div key={proj.id} className={`step__card step__card--accordion ${isOpen ? 'step__card--open' : ''}`}>
+          <div
+            className="step__card-header step__card-header--clickable"
+            onClick={() => toggleOpen(proj.id)}
+            role="button"
+            tabIndex={0}
+            aria-expanded={isOpen}
+            onKeyDown={(e) => e.key === 'Enter' && toggleOpen(proj.id)}
+          >
+            <div className="step__card-header-content">
+              <span className="step__card-number">{main}</span>
+              {dates && <span className="step__card-dates">{dates}</span>}
+            </div>
+            <div className="step__card-header-actions">
+              <ChevronDownIcon className="step__card-chevron" size={18} open={isOpen} />
+              <button
+                type="button"
+                className="step__remove-btn step__remove-btn--icon"
+                onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(proj.id); }}
+                aria-label="Supprimer ce projet"
+              >
+                <TrashIcon size={14} />
+              </button>
+            </div>
           </div>
 
+          <div className="step__card-body">
           <label className="step__field">
             <span className="step__label">Nom du projet *</span>
             <input
@@ -271,14 +343,34 @@ export default function ProjectStep({ data, onChange }: Props) {
               </div>
             </div>
           </div>
+
+          <div className="step__card-validate">
+            <button
+              type="button"
+              className="step__validate-btn"
+              onClick={(e) => { e.stopPropagation(); toggleOpen(proj.id); }}
+            >
+              Valider
+            </button>
+          </div>
+          </div>
         </div>
-      ))}
+        );
+      })}
 
       {data.length > 0 && (
         <button type="button" className="step__add-btn step__add-btn--bottom" onClick={add}>
           + Ajouter un projet
         </button>
       )}
+
+      <DeleteConfirmModal
+        isOpen={!!deleteConfirmId}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={() => deleteConfirmId && remove(deleteConfirmId)}
+        title="Supprimer ce projet ?"
+        itemLabel={deleteLabel}
+      />
     </div>
   );
 }

@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { ChevronDownIcon, TrashIcon } from '../../../components/icons';
+import DeleteConfirmModal from '../../../components/DeleteConfirmModal';
 import type { Education } from '../../../types/cv';
 
 interface Props {
@@ -67,6 +69,20 @@ function SkillTagInput({ tags, onChange, placeholder }: { tags: string[]; onChan
   );
 }
 
+function formatMonth(ym: string): string {
+  if (!ym) return '';
+  const [y, m] = ym.split('-');
+  const months = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  const mi = parseInt(m || '1', 10) - 1;
+  return `${months[mi] || m} ${y}`;
+}
+
+function formatDateRange(start?: string, end?: string): string {
+  if (!start) return '';
+  if (end) return `${formatMonth(start)} - ${formatMonth(end)}`;
+  return formatMonth(start);
+}
+
 function sortByDateDesc(items: Education[]): Education[] {
   return [...items].sort((a, b) => {
     const dateA = a.startDate || '';
@@ -79,9 +95,45 @@ function sortByDateDesc(items: Education[]): Education[] {
 }
 
 export default function EducationStep({ data, onChange }: Props) {
-  const add = () => onChange([...data, emptyEducation()]);
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const remove = (id: string) => onChange(data.filter((e) => e.id !== id));
+  const toggleOpen = useCallback((id: string) => {
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const add = () => {
+    const newEdu = emptyEducation();
+    onChange([...data, newEdu]);
+    setOpenIds((prev) => new Set(prev).add(newEdu.id));
+  };
+
+  const remove = (id: string) => {
+    onChange(data.filter((e) => e.id !== id));
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setDeleteConfirmId(null);
+  };
+
+  const eduToDelete = deleteConfirmId ? data.find((e) => e.id === deleteConfirmId) : null;
+  const deleteLabel = eduToDelete
+    ? [eduToDelete.degree, eduToDelete.school].filter(Boolean).join(' — ') || 'cette formation'
+    : '';
+
+  useEffect(() => {
+    if (!deleteConfirmId) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setDeleteConfirmId(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [deleteConfirmId]);
 
   const update = (id: string, field: keyof Education, value: string) => {
     onChange(data.map((e) => {
@@ -116,15 +168,38 @@ export default function EducationStep({ data, onChange }: Props) {
         <p className="step__empty">Aucune formation ajoutée.<br/>Cliquez sur &laquo; + Ajouter &raquo; pour commencer.</p>
       )}
 
-      {sorted.map((edu, i) => (
-        <div key={edu.id} className="step__card">
-          <div className="step__card-header">
-            <span className="step__card-number">Formation {i + 1}</span>
-            <button type="button" className="step__remove-btn" onClick={() => remove(edu.id)}>
-              Supprimer
-            </button>
+      {sorted.map((edu, i) => {
+        const isOpen = openIds.has(edu.id);
+        const main = [edu.degree, edu.school].filter(Boolean).join(' — ') || `Formation ${i + 1}`;
+        const dates = formatDateRange(edu.startDate, edu.endDate);
+        return (
+        <div key={edu.id} className={`step__card step__card--accordion ${isOpen ? 'step__card--open' : ''}`}>
+          <div
+            className="step__card-header step__card-header--clickable"
+            onClick={() => toggleOpen(edu.id)}
+            role="button"
+            tabIndex={0}
+            aria-expanded={isOpen}
+            onKeyDown={(e) => e.key === 'Enter' && toggleOpen(edu.id)}
+          >
+            <div className="step__card-header-content">
+              <span className="step__card-number">{main}</span>
+              {dates && <span className="step__card-dates">{dates}</span>}
+            </div>
+            <div className="step__card-header-actions">
+              <ChevronDownIcon className="step__card-chevron" size={18} open={isOpen} />
+              <button
+                type="button"
+                className="step__remove-btn step__remove-btn--icon"
+                onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(edu.id); }}
+                aria-label="Supprimer cette formation"
+              >
+                <TrashIcon size={14} />
+              </button>
+            </div>
           </div>
 
+          <div className="step__card-body">
           <div className="step__row">
             <label className="step__field">
               <span className="step__label">Diplôme *</span>
@@ -223,14 +298,34 @@ export default function EducationStep({ data, onChange }: Props) {
               </div>
             </div>
           </div>
+
+          <div className="step__card-validate">
+            <button
+              type="button"
+              className="step__validate-btn"
+              onClick={(e) => { e.stopPropagation(); toggleOpen(edu.id); }}
+            >
+              Valider
+            </button>
+          </div>
+          </div>
         </div>
-      ))}
+        );
+      })}
 
       {data.length > 0 && (
         <button type="button" className="step__add-btn step__add-btn--bottom" onClick={add}>
           + Ajouter une formation
         </button>
       )}
+
+      <DeleteConfirmModal
+        isOpen={!!deleteConfirmId}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={() => deleteConfirmId && remove(deleteConfirmId)}
+        title="Supprimer cette formation ?"
+        itemLabel={deleteLabel}
+      />
     </div>
   );
 }
