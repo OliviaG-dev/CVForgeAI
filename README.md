@@ -19,6 +19,9 @@ L'objectif est de simplifier la création de CV en transformant quelques informa
 - **Amélioration intelligente** : reformulation des expériences professionnelles pour les rendre plus percutantes.
 - **Adaptation à une offre d'emploi** : optimisez votre CV pour une offre spécifique et les systèmes ATS.
 - **Export PDF** : téléchargez votre CV dans un format propre et professionnel (Puppeteer).
+- **Accordéons** : expériences, projets et formations en accordéon avec dates dans l'en-tête.
+- **Déduplication des compétences** : fusion automatique des compétences similaires (React/react, Node.js/nodejs, etc.).
+- **Interface responsive** : boutons en icônes sur mobile/tablette.
 
 ## Technologies
 
@@ -36,10 +39,13 @@ cvforge-ai/
 ├── client/                 # Frontend React
 │   ├── src/
 │   │   ├── components/
-│   │   │   └── icons/      # Composants SVG (icônes)
+│   │   │   ├── icons/      # Icônes SVG (ChevronDown, Trash, Eye...)
+│   │   │   └── DeleteConfirmModal.tsx
 │   │   ├── pages/
 │   │   │   ├── home/       # Page d'accueil
 │   │   │   └── cv-form/    # Formulaire et aperçu CV
+│   │   ├── utils/
+│   │   │   └── skills.ts   # Déduplication des compétences
 │   │   ├── App.tsx
 │   │   ├── main.tsx
 │   │   └── index.css
@@ -134,6 +140,8 @@ CVForge AI est un projet portfolio conçu pour démontrer :
 - La conception d'une application web moderne
 - La structuration d'un projet full-stack en monorepo
 - La génération de PDF côté serveur avec Puppeteer
+- La gestion de formulaires complexes (accordéons, modales de confirmation)
+- La normalisation et déduplication de données
 
 ## Licence
 
