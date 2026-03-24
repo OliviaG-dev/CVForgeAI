@@ -5,7 +5,11 @@ interface DeleteConfirmModalProps {
   onClose: () => void;
   onConfirm: () => void;
   title: string;
-  itemLabel: string;
+  /** Utilisé si `description` est absent */
+  itemLabel?: string;
+  /** Remplace le texte par défaut (suppression d’un élément) */
+  description?: string;
+  confirmLabel?: string;
 }
 
 export default function DeleteConfirmModal({
@@ -14,6 +18,8 @@ export default function DeleteConfirmModal({
   onConfirm,
   title,
   itemLabel,
+  description,
+  confirmLabel = 'Supprimer',
 }: DeleteConfirmModalProps) {
   if (!isOpen) return null;
 
@@ -35,7 +41,8 @@ export default function DeleteConfirmModal({
           {title}
         </h3>
         <p className="delete-confirm-modal__text">
-          Êtes-vous sûr de vouloir supprimer &laquo; {itemLabel} &raquo; ? Cette action est irréversible.
+          {description ??
+            `Êtes-vous sûr de vouloir supprimer « ${itemLabel ?? ''} » ? Cette action est irréversible.`}
         </p>
         <div className="delete-confirm-modal__actions">
           <button
@@ -50,7 +57,7 @@ export default function DeleteConfirmModal({
             className="delete-confirm-modal__btn delete-confirm-modal__btn--confirm"
             onClick={handleConfirm}
           >
-            Supprimer
+            {confirmLabel}
           </button>
         </div>
       </div>

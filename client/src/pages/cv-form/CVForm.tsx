@@ -1,9 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import type { CVData, PersonalInfo, Experience, Project, Education, Language, Certification, AccentColor, CVTemplate } from '../../types/cv';
 import { emptyCVData } from '../../types/cv';
 import { mergeSkillsUnique } from '../../utils/skills';
+import { clearCVDraft, loadCVDraft, saveCVDraft } from '../../utils/cvDraftStorage';
+import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 import PersonalInfoStep from './steps/PersonalInfoStep.js';
 import ExperienceStep from './steps/ExperienceStep.js';
 import ProjectStep from './steps/ProjectStep.js';
@@ -23,14 +25,18 @@ const STEPS = [
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://cvforgeai.onrender.com' : 'http://localhost:3001');
 
+const SAVE_DEBOUNCE_MS = 400;
+
 export default function CVForm() {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [data, setData] = useState<CVData>(emptyCVData);
+  const initialDraft = useMemo(() => loadCVDraft(), []);
+  const [currentStep, setCurrentStep] = useState(initialDraft?.step ?? 0);
+  const [data, setData] = useState<CVData>(initialDraft?.data ?? emptyCVData);
   const [generating, setGenerating] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [coldStartHint, setColdStartHint] = useState(false);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!previewing && !generating) {
@@ -40,6 +46,13 @@ export default function CVForm() {
     const t = setTimeout(() => setColdStartHint(true), 5000);
     return () => clearTimeout(t);
   }, [previewing, generating]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      saveCVDraft(data, currentStep);
+    }, SAVE_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [data, currentStep]);
 
   const updateData = <K extends keyof CVData>(key: K, value: CVData[K]) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -95,6 +108,15 @@ export default function CVForm() {
 
   const next = () => setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
   const prev = () => setCurrentStep((s) => Math.max(s - 1, 0));
+
+  const handleResetForm = useCallback(() => {
+    clearCVDraft();
+    setData({
+      ...emptyCVData,
+      personalInfo: { ...emptyCVData.personalInfo },
+    });
+    setCurrentStep(0);
+  }, []);
 
   const handlePreview = async () => {
     setPreviewing(true);
@@ -246,6 +268,14 @@ export default function CVForm() {
           <h1 className="cvform__title">Créer mon CV</h1>
           <p className="cvform__header-hint">Étape {currentStep + 1} sur {STEPS.length}</p>
         </div>
+        <button
+          type="button"
+          className="cvform__reset"
+          onClick={() => setResetConfirmOpen(true)}
+          aria-label="Réinitialiser le formulaire et le brouillon enregistré"
+        >
+          Réinitialiser
+        </button>
       </header>
 
       <nav className="cvform__stepper">
@@ -324,6 +354,15 @@ export default function CVForm() {
           </button>
         )}
       </footer>
+
+      <DeleteConfirmModal
+        isOpen={resetConfirmOpen}
+        onClose={() => setResetConfirmOpen(false)}
+        onConfirm={handleResetForm}
+        title="Réinitialiser le formulaire ?"
+        description="Toutes les données saisies et le brouillon enregistré dans ce navigateur seront effacés. Cette action est irréversible."
+        confirmLabel="Réinitialiser"
+      />
 
       {previewUrl &&
         createPortal(

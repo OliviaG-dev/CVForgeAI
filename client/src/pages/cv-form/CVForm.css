@@ -17,14 +17,37 @@
 /* ─── Header ─── */
 
 .cvform__header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1rem;
   margin-bottom: 1.75rem;
   flex-shrink: 0;
 }
 
+.cvform__reset {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(248, 113, 113, 0.06);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  color: rgba(252, 165, 165, 0.85);
+  padding: 0.45rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.cvform__reset:hover {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fecaca;
+}
+
 .cvform__back {
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -57,6 +80,8 @@
 }
 
 .cvform__header-center {
+  justify-self: center;
+  text-align: center;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -1574,6 +1599,15 @@
 
   .cvform__step {
     padding: 0.55rem 0.4rem;
+  }
+
+  .cvform__header {
+    gap: 0.5rem;
+  }
+
+  .cvform__reset {
+    font-size: 0.72rem;
+    padding: 0.4rem 0.55rem;
   }
 
   .cvform__header-hint {
