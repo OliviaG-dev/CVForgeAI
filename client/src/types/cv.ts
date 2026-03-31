@@ -66,7 +66,7 @@ export interface Certification {
 }
 
 export type AccentColor = 'blue' | 'green' | 'orange' | 'red' | 'pink' | 'violet' | 'black' | 'teal';
-export type CVTemplate = 'classic' | 'creative';
+export type CVTemplate = 'classic' | 'classic_dev' | 'creative';
 
 export interface CVData {
   personalInfo: PersonalInfo;

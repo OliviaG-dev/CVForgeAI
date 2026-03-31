@@ -14,6 +14,7 @@ const ACCENT_COLORS: { value: AccentColor; label: string; hex: string }[] = [
 
 const TEMPLATES: { value: CVTemplate; label: string; desc: string }[] = [
   { value: 'classic', label: 'Classique', desc: 'Sobre et professionnel, optimisé ATS' },
+  { value: 'classic_dev', label: 'Classique dev', desc: 'Comme le classique, compétences regroupées par thème (front, back, IA…)' },
   { value: 'creative', label: 'Créatif', desc: 'Design 2 colonnes avec photo' },
 ];
 

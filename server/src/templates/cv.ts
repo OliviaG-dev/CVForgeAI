@@ -66,7 +66,7 @@ interface Certification {
 }
 
 type AccentColor = 'blue' | 'green' | 'orange' | 'red' | 'pink' | 'violet' | 'black' | 'teal';
-type CVTemplate = 'classic' | 'creative';
+type CVTemplate = 'classic' | 'classic_dev' | 'creative';
 
 const COLOR_MAP: Record<AccentColor, string> = {
   blue:   '#2563eb',
@@ -174,7 +174,147 @@ export function generateCVHTMLForTemplate(data: CVData): string {
   return generateClassicCVHTML(data);
 }
 
+type DevSkillBucket = 'mobile' | 'dataviz' | 'ia' | 'backend' | 'frontend' | 'other';
+
+function normalizeSkillMatch(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .trim();
+}
+
+/** Regroupe les listes du formulaire en lignes « Compétences clés » (template classique dev). */
+function classifySkillsForClassicDev(
+  technicalSkills: string[],
+  tools: string[],
+  softSkills: string[],
+): { label: string; items: string[] }[] {
+  const techIn = technicalSkills.map((s) => s.trim()).filter(Boolean);
+  const toolsIn = tools.map((s) => s.trim()).filter(Boolean);
+  const softIn = softSkills.map((s) => s.trim()).filter(Boolean);
+  const seen = new Set<string>();
+  const buckets: Record<DevSkillBucket, Set<string>> = {
+    mobile: new Set(),
+    dataviz: new Set(),
+    ia: new Set(),
+    backend: new Set(),
+    frontend: new Set(),
+    other: new Set(),
+  };
+  const methodology = new Set<string>();
+
+  const addBucket = (bucket: DevSkillBucket, raw: string) => {
+    const key = normalizeSkillMatch(raw);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    buckets[bucket].add(raw.trim());
+  };
+
+  const classifyTech = (raw: string): DevSkillBucket | null => {
+    const n = normalizeSkillMatch(raw);
+    if (!n) return null;
+    if (/\breact\s*native\b/.test(n) || /\bionic\b/.test(n) || /\bexpo\b/.test(n)) return 'mobile';
+    if (/\bd3\.?js?\b/.test(n) || n.includes('chart.js') || n.includes('highcharts')) return 'dataviz';
+    if (
+      /\bgemini\b/.test(n) ||
+      /\bpuppeteer\b/.test(n) ||
+      /\bcursor\b/.test(n) ||
+      /\bopenai\b/.test(n) ||
+      /\bchatgpt\b/.test(n) ||
+      n === 'ia' ||
+      /\bllm\b/.test(n) ||
+      n.includes('langchain') ||
+      n.includes('generation de contenu')
+    )
+      return 'ia';
+    if (
+      /\bnode\.?js?\b/.test(n) ||
+      /\bexpress\b/.test(n) ||
+      /\bnest(?:js)?\b/.test(n) ||
+      /\bsymfony\b/.test(n) ||
+      /\bsymphony\b/.test(n) ||
+      /\bdjango\b/.test(n) ||
+      /\bfastapi\b/.test(n) ||
+      /\bgraphql\b/.test(n) ||
+      n.includes('microservice') ||
+      (n.includes('api') && (n.includes('rest') || /\bapis?\b/.test(n))) ||
+      /\bsupabase\b/.test(n) ||
+      /\bpostgres\b/.test(n) ||
+      /\bmongodb\b/.test(n) ||
+      /\bprisma\b/.test(n) ||
+      /\bredis\b/.test(n)
+    )
+      return 'backend';
+    if (
+      /\breact\b/.test(n) ||
+      /\bvue\b/.test(n) ||
+      /\bangular\b/.test(n) ||
+      /\bsvelte\b/.test(n) ||
+      /\btypescript\b/.test(n) ||
+      /\bjavascript\b/.test(n) ||
+      /\btailwind\b/.test(n) ||
+      /\bbootstrap\b/.test(n) ||
+      /\bsass\b/.test(n) ||
+      n.includes('zustand') ||
+      n.includes('recharts') ||
+      /\beslint\b/.test(n) ||
+      /\bwebpack\b/.test(n) ||
+      /\bvite\b/.test(n) ||
+      /\bvitest\b/.test(n) ||
+      /\bjest\b/.test(n) ||
+      /\bnext\.?js?\b/.test(n) ||
+      /\bnuxt\b/.test(n) ||
+      /\bhtml5?\b/.test(n) ||
+      /\bcss3?\b/.test(n) ||
+      n === 'html' ||
+      n === 'css'
+    )
+      return 'frontend';
+    return null;
+  };
+
+  for (const raw of [...techIn, ...toolsIn]) {
+    const bucket = classifyTech(raw);
+    if (bucket) addBucket(bucket, raw);
+    else addBucket('other', raw);
+  }
+
+  for (const raw of softIn) {
+    const n = normalizeSkillMatch(raw);
+    if (!n || seen.has(n)) continue;
+    const softAsTech = classifyTech(raw);
+    if (softAsTech === 'ia' || n.includes('generation de contenu')) {
+      addBucket('ia', raw);
+      continue;
+    }
+    seen.add(n);
+    methodology.add(raw.trim());
+  }
+
+  const order: { key: DevSkillBucket; label: string }[] = [
+    { key: 'frontend', label: 'Front-end' },
+    { key: 'backend', label: 'Back-end' },
+    { key: 'ia', label: 'IA / automatisation' },
+    { key: 'dataviz', label: 'Data viz' },
+    { key: 'mobile', label: 'Mobile' },
+    { key: 'other', label: 'Autres' },
+  ];
+
+  const rows: { label: string; items: string[] }[] = [];
+  for (const { key, label } of order) {
+    const items = [...buckets[key]].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+    if (items.length > 0) rows.push({ label, items });
+  }
+  if (methodology.size > 0) {
+    const items = [...methodology].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+    rows.push({ label: 'Méthodologies & savoir-être', items });
+  }
+  return rows;
+}
+
 function generateClassicCVHTML(data: CVData): string {
+  const useDevSkills = data.template === 'classic_dev';
   const { personalInfo: p, technicalSkills, tools, softSkills, languages, certifications, interests } = data;
   const experiences = sortByStartDateDesc(data.experiences);
   const projects = sortByStartDateDesc(data.projects || []);
@@ -199,6 +339,7 @@ function generateClassicCVHTML(data: CVData): string {
   const contactLine = contactItems.join('<span class="sep">•</span>');
 
   const hasSkills = technicalSkills.length > 0 || tools.length > 0 || softSkills.length > 0;
+  const devSkillRows = useDevSkills ? classifySkillsForClassicDev(technicalSkills, tools, softSkills) : [];
   const hasExperiences = experiences.length > 0;
   const hasProjects = (projects || []).length > 0;
   const hasEducation = education.length > 0;
@@ -331,6 +472,15 @@ function generateClassicCVHTML(data: CVData): string {
   }
 
   .skills-val { color: #4b5563; }
+
+  .skills-grid--dev {
+    grid-template-columns: 200pt 1fr;
+  }
+
+  .section__title--dev-skills {
+    text-transform: none;
+    letter-spacing: 1pt;
+  }
 
   /* ── Entries (experiences / education) ── */
   .entry {
@@ -474,7 +624,20 @@ function generateClassicCVHTML(data: CVData): string {
     ${p.summary ? `<div class="header__summary">${esc(p.summary)}</div>` : ''}
   </div>
 
-  ${hasSkills ? `
+  ${hasSkills && useDevSkills && devSkillRows.length > 0 ? `
+  <!-- Compétences clés (classique dev) -->
+  <div class="section">
+    <div class="section__title section__title--dev-skills">💥 COMPÉTENCES CLÉS</div>
+    <div class="skills-grid skills-grid--dev">
+      ${devSkillRows
+        .map(
+          ({ label, items }) =>
+            `<div class="skills-cat">${esc(label)} :</div><div class="skills-val">${items.map(esc).join(', ')}</div>`,
+        )
+        .join('')}
+    </div>
+  </div>` : ''}
+  ${hasSkills && (!useDevSkills || devSkillRows.length === 0) ? `
   <!-- Compétences -->
   <div class="section">
     <div class="section__title">Compétences</div>

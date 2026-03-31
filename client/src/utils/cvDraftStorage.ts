@@ -32,7 +32,7 @@ const ACCENT_COLORS: AccentColor[] = [
   'teal',
 ];
 
-const CV_TEMPLATES: CVTemplate[] = ['classic', 'creative'];
+const CV_TEMPLATES: CVTemplate[] = ['classic', 'classic_dev', 'creative'];
 
 const LANGUAGE_LEVELS = ['Natif', 'Courant', 'Intermédiaire', 'Débutant'] as const;
 
