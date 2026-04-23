@@ -225,7 +225,14 @@ function classifySkillsForClassicDev(
       n === 'ia' ||
       /\bllm\b/.test(n) ||
       n.includes('langchain') ||
-      n.includes('generation de contenu')
+      n.includes('generation de contenu') ||
+      /\bprompting\b/.test(n) ||
+      n.includes('prompt engineering') ||
+      n.includes('ingenierie des prompts') ||
+      n.includes('ingenierie de prompt') ||
+      (n.includes('ingenierie') && n.includes('prompt')) ||
+      /\bprompt[-\s/]+ia\b/.test(n) ||
+      /\bia[-\s/]+prompt\b/.test(n)
     )
       return 'ia';
     if (
@@ -236,6 +243,7 @@ function classifySkillsForClassicDev(
       /\bsymphony\b/.test(n) ||
       /\bdjango\b/.test(n) ||
       /\bfastapi\b/.test(n) ||
+      /\bphp\b/.test(n) ||
       /\bgraphql\b/.test(n) ||
       n.includes('microservice') ||
       (n.includes('api') && (n.includes('rest') || /\bapis?\b/.test(n))) ||
@@ -248,8 +256,8 @@ function classifySkillsForClassicDev(
       return 'backend';
     if (
       /\breact\b/.test(n) ||
-      /\bvue\b/.test(n) ||
-      /\bangular\b/.test(n) ||
+      n.startsWith('vue') ||
+      /\bangular/.test(n) ||
       /\bsvelte\b/.test(n) ||
       /\btypescript\b/.test(n) ||
       /\bjavascript\b/.test(n) ||
@@ -627,7 +635,7 @@ function generateClassicCVHTML(data: CVData): string {
   ${hasSkills && useDevSkills && devSkillRows.length > 0 ? `
   <!-- Compétences clés (classique dev) -->
   <div class="section">
-    <div class="section__title section__title--dev-skills">💥 COMPÉTENCES CLÉS</div>
+    <div class="section__title section__title--dev-skills">COMPÉTENCES CLÉS</div>
     <div class="skills-grid skills-grid--dev">
       ${devSkillRows
         .map(

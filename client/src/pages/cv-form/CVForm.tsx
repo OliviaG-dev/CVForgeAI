@@ -27,6 +27,15 @@ const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https:/
 
 const SAVE_DEBOUNCE_MS = 400;
 
+function messageForPdfFetchError(err: unknown): string {
+  if (err instanceof TypeError && (err.message === 'Failed to fetch' || err.message.includes('Load failed'))) {
+    return import.meta.env.DEV
+      ? "L'API n'est pas joignable. Lance le serveur : à la racine du projet, `npm run dev` (client + API), ou `npm run dev --prefix server` (port 3001)."
+      : "Impossible de contacter le serveur. Réessaie plus tard.";
+  }
+  return err instanceof Error ? err.message : 'Erreur réseau';
+}
+
 export default function CVForm() {
   const navigate = useNavigate();
   const initialDraft = useMemo(() => loadCVDraft(), []);
@@ -136,7 +145,7 @@ export default function CVForm() {
       setPreviewUrl(url);
     } catch (err) {
       console.error('Erreur aperçu PDF:', err);
-      alert(err instanceof Error ? err.message : 'Erreur lors de l\'aperçu');
+      alert(messageForPdfFetchError(err));
     } finally {
       setPreviewing(false);
     }
@@ -181,7 +190,7 @@ export default function CVForm() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Erreur génération PDF:', err);
-      alert(err instanceof Error ? err.message : 'Erreur lors de la génération');
+      alert(messageForPdfFetchError(err));
     } finally {
       setGenerating(false);
     }
