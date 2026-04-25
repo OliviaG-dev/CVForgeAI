@@ -232,7 +232,9 @@ function classifySkillsForClassicDev(
       n.includes('ingenierie de prompt') ||
       (n.includes('ingenierie') && n.includes('prompt')) ||
       /\bprompt[-\s/]+ia\b/.test(n) ||
-      /\bia[-\s/]+prompt\b/.test(n)
+      /\bia[-\s/]+prompt\b/.test(n) ||
+      /\bworkflows?\s+ia\b/.test(n) ||
+      /\bia\s+workflows?\b/.test(n)
     )
       return 'ia';
     if (
@@ -249,9 +251,11 @@ function classifySkillsForClassicDev(
       (n.includes('api') && (n.includes('rest') || /\bapis?\b/.test(n))) ||
       /\bsupabase\b/.test(n) ||
       /\bpostgres\b/.test(n) ||
+      /\bpostgresql\b/.test(n) ||
       /\bmongodb\b/.test(n) ||
       /\bprisma\b/.test(n) ||
-      /\bredis\b/.test(n)
+      /\bredis\b/.test(n) ||
+      /\bopen\s*data\b/.test(n)
     )
       return 'backend';
     if (
@@ -276,7 +280,9 @@ function classifySkillsForClassicDev(
       /\bhtml5?\b/.test(n) ||
       /\bcss3?\b/.test(n) ||
       n === 'html' ||
-      n === 'css'
+      n === 'css' ||
+      n.includes('responsive design') ||
+      n.includes('design responsive')
     )
       return 'frontend';
     return null;
@@ -292,8 +298,8 @@ function classifySkillsForClassicDev(
     const n = normalizeSkillMatch(raw);
     if (!n || seen.has(n)) continue;
     const softAsTech = classifyTech(raw);
-    if (softAsTech === 'ia' || n.includes('generation de contenu')) {
-      addBucket('ia', raw);
+    if (softAsTech || n.includes('generation de contenu')) {
+      addBucket(softAsTech ?? 'ia', raw);
       continue;
     }
     seen.add(n);
