@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { ChevronDownIcon, TrashIcon } from '../../../components/icons';
 import DeleteConfirmModal from '../../../components/DeleteConfirmModal';
 import type { Experience } from '../../../types/cv';
+import { computeDurationLabel } from '../../../utils/dateDuration';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://cvforgeai.onrender.com' : 'http://localhost:3001');
 
@@ -23,6 +24,7 @@ const emptyExperience: () => Experience = () => ({
   endDate: '',
   current: false,
   description: '',
+  structuredDescription: false,
   projectLink: '',
   technicalSkills: [],
   tools: [],
@@ -83,9 +85,14 @@ function formatMonth(ym: string): string {
 
 function formatDateRange(start?: string, end?: string, current?: boolean): string {
   if (!start) return '';
-  if (current) return `${formatMonth(start)} - En cours`;
-  if (end) return `${formatMonth(start)} - ${formatMonth(end)}`;
-  return formatMonth(start);
+  let label: string;
+  if (current) label = `${formatMonth(start)} - En cours`;
+  else if (end) label = `${formatMonth(start)} - ${formatMonth(end)}`;
+  else label = formatMonth(start);
+
+  const duration = computeDurationLabel(start, end ?? '', { current });
+  if (!duration) return label;
+  return `${label} (${duration})`;
 }
 
 function sortByDateDesc(items: Experience[]): Experience[] {
@@ -152,7 +159,10 @@ export default function ExperienceStep({ data, onChange }: Props) {
       const res = await fetch(`${API_URL}/api/cv/improve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: text }),
+        body: JSON.stringify({
+          description: text,
+          senior: exp?.structuredDescription === true,
+        }),
       });
       if (!res.ok) throw new Error('Erreur serveur');
       const { improved } = await res.json();
@@ -296,6 +306,15 @@ export default function ExperienceStep({ data, onChange }: Props) {
             <span>Poste actuel</span>
           </label>
 
+          <label className="step__checkbox step__checkbox--inline">
+            <input
+              type="checkbox"
+              checked={exp.structuredDescription === true}
+              onChange={(e) => update(exp.id, 'structuredDescription', e.target.checked)}
+            />
+            <span>Format profil senior (puces ●, titre en gras avant « : » dans le CV)</span>
+          </label>
+
           <label className="step__field">
             <div className="step__field-header">
               <span className="step__label">Description des missions</span>
@@ -307,7 +326,11 @@ export default function ExperienceStep({ data, onChange }: Props) {
                 className={`step__improve-btn${improvingId === exp.id ? ' step__improve-btn--loading' : ''}`}
                 onClick={() => handleImproveDescription(exp.id)}
                 disabled={improvingId !== null || !exp.description?.trim()}
-                title="Améliorer le texte avec l'IA"
+                title={
+                  exp.structuredDescription
+                    ? "Structurer en puces senior avec l'IA"
+                    : "Améliorer le texte avec l'IA"
+                }
               >
                 {improvingId === exp.id ? (
                   <span className="step__improve-btn-loading" aria-label="Chargement en cours">
@@ -316,7 +339,7 @@ export default function ExperienceStep({ data, onChange }: Props) {
                     <span className="step__improve-btn-dot" />
                   </span>
                 ) : (
-                  "Améliorer avec l'IA"
+                  exp.structuredDescription ? "Structurer (IA senior)" : "Améliorer avec l'IA"
                 )}
               </button>
             </div>
@@ -324,9 +347,18 @@ export default function ExperienceStep({ data, onChange }: Props) {
               className="step__textarea"
               value={exp.description}
               onChange={(e) => update(exp.id, 'description', e.target.value)}
-              placeholder="Décrivez vos missions et réalisations principales..."
-              rows={4}
+              placeholder={
+                exp.structuredDescription
+                  ? "● Ownership Produit (Projet X) : description...\n● Mentorat & Leadership : ..."
+                  : "Décrivez vos missions et réalisations principales..."
+              }
+              rows={exp.structuredDescription || (exp.description?.length ?? 0) > 400 ? 8 : 4}
             />
+            {exp.structuredDescription && (
+              <p className="step__hint">
+                Une ligne par puce, avec « Titre : détail ». Les titres avant « : » apparaissent en gras dans le PDF.
+              </p>
+            )}
           </label>
 
           <label className="step__field">

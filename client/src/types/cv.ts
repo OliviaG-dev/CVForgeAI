@@ -21,6 +21,8 @@ export interface Experience {
   endDate: string;
   current: boolean;
   description: string;
+  /** Puces structurées + titres en gras avant « : » dans le PDF */
+  structuredDescription: boolean;
   projectLink: string;
   technicalSkills: string[];
   tools: string[];
@@ -44,6 +46,8 @@ export interface Project {
   id: string;
   name: string;
   description: string;
+  /** Puces structurées + titres en gras avant « : » dans le PDF */
+  structuredDescription: boolean;
   url: string;
   startDate: string;
   endDate: string;

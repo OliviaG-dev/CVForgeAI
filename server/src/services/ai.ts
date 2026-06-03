@@ -43,19 +43,31 @@ Formation : ${input.education}`;
   return response.text() || '';
 }
 
-export async function improveDescription(description: string): Promise<string> {
+export async function improveDescription(
+  description: string,
+  options?: { senior?: boolean },
+): Promise<string> {
   const model = getClient().getGenerativeModel({
     model: 'gemini-2.5-flash',
     generationConfig: { temperature: 0.7 },
   });
 
+  const seniorBlock = options?.senior
+    ? `
+MISE EN FORME SENIOR (obligatoire) :
+- Une puce par ligne, préfixée par le caractère ● (exemple : ● Titre (contexte) : description).
+- Chaque puce : « Titre court » ou « Titre (entreprise/projet) » suivi de « : » puis 1 à 3 phrases avec verbes d'action et résultats concrets.
+- 4 à 7 puces maximum, sans paragraphe libre ni liste à tirets.
+- Conserver les faits, technologies et chiffres fournis ; ne pas inventer.`
+    : `
+MISE EN FORME : Utilise des retours à la ligne pour aérer le texte et structurer les idées. Sépare les paragraphes par une ligne vide pour une lecture fluide. Maximum 3-4 lignes par paragraphe.`;
+
   const prompt = `Tu es un expert en rédaction de CV. Reformule et améliore la description suivante.
 
 STYLE : Texte commercial et professionnel, percutant, optimisé pour les systèmes ATS. Ton valorisant et engageant.
+${seniorBlock}
 
-MISE EN FORME : Utilise des retours à la ligne pour aérer le texte et structurer les idées. Sépare les paragraphes par une ligne vide pour une lecture fluide. Maximum 3-4 lignes par paragraphe.
-
-RÈGLE : Retourne UNIQUEMENT le texte amélioré, rien d'autre. Pas d'options multiples, pas d'explications, pas de markdown (###, ---). Juste le résumé formaté avec des sauts de ligne.
+RÈGLE : Retourne UNIQUEMENT le texte amélioré, rien d'autre. Pas d'options multiples, pas d'explications, pas de markdown (###, ---).
 
 Description à améliorer :
 ${description}`;
