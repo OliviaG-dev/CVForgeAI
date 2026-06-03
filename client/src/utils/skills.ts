@@ -11,7 +11,7 @@ function normalizeSkill(s: string): string {
     .trim()
     .replace(/\s+/g, ' ')
     .replace(/\./g, '')
-    .replace(/[/\-]/g, ' ')
+    .replace(/[/-]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
