@@ -16,146 +16,137 @@ L'objectif est de simplifier la création de CV en transformant quelques informa
 
 - **Génération automatique de CV** : créez un CV complet en quelques secondes à partir de vos informations.
 - **Prévisualisation en temps réel** : visualisez votre CV au fur et à mesure de la saisie.
-- **Amélioration intelligente** : reformulation des expériences professionnelles pour les rendre plus percutantes.
-- **Adaptation à une offre d'emploi** : optimisez votre CV pour une offre spécifique et les systèmes ATS.
+- **Amélioration intelligente** : reformulation des expériences et projets (mode standard ou **profil senior** avec puces structurées).
+- **Templates** : Classique, **Classique dev** (compétences par thème), Créatif (2 colonnes + photo).
 - **Export PDF** : téléchargez votre CV dans un format propre et professionnel (Puppeteer).
-- **Accordéons** : expériences, projets et formations en accordéon avec dates dans l'en-tête.
-- **Déduplication des compétences** : fusion automatique des compétences similaires (React/react, Node.js/nodejs, etc.).
+- **Accordéons** : expériences, projets et formations avec dates et **durée automatique** (ex. `2 ans et 3 mois`).
+- **Format profil senior** : puces `●`, titres en gras gris avant `:` pour les descriptions d'expériences et de projets.
+- **Compétences clés (dev)** : regroupement automatique (Front-end, Mobile, Back-end & API, Tests, DevOps, IA, Méthodologies…).
+- **Langues** : pour l'anglais (Natif / Courant / Intermédiaire), cases d'usage pro (Professionnel, Équipe internationale, Daily & Syncs techniques).
+- **Mise en page dev** : espacement harmonieux de l'en-tête, **expériences à partir de la page 2** sur le template classique dev.
+- **Ville discrète** : entreprise / école en gris moyen, ville en petit gris clair.
+- **Déduplication des compétences** : fusion automatique des doublons (React/react, Node.js/nodejs, etc.).
+- **Optimisation ATS** : mots-clés cachés injectés dans le PDF.
 - **Interface responsive** : boutons en icônes sur mobile/tablette.
 
 ## Technologies
 
 | Catégorie | Technologies |
 |-----------|-------------|
-| Frontend | React, TypeScript, Vite |
-| Backend | Node.js, Express, TypeScript |
+| Frontend | React, TypeScript, Vite, Vitest |
+| Backend | Node.js, Express, TypeScript, Vitest |
 | IA | Google Gemini 2.5 Flash (gratuit) |
 | PDF | Puppeteer (Chrome headless) |
+| CI | GitHub Actions |
 
 ## Structure du projet
 
 ```
 cvforge-ai/
+├── .github/workflows/      # CI (lint, typecheck, tests, build)
 ├── client/                 # Frontend React
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── icons/      # Icônes SVG (ChevronDown, Trash, Eye...)
-│   │   │   └── DeleteConfirmModal.tsx
-│   │   ├── pages/
-│   │   │   ├── home/       # Page d'accueil
-│   │   │   └── cv-form/    # Formulaire et aperçu CV
-│   │   ├── utils/
-│   │   │   └── skills.ts   # Déduplication des compétences
-│   │   ├── App.tsx
-│   │   ├── main.tsx
-│   │   └── index.css
-│   ├── public/
-│   ├── index.html
-│   ├── vite.config.ts
+│   │   ├── pages/cv-form/  # Formulaire multi-étapes + aperçu PDF
+│   │   ├── types/          # Types CV + langues (englishContexts)
+│   │   └── utils/          # skills, language, dateDuration, cvDraftStorage
 │   └── package.json
 │
 ├── server/                 # Backend Express
 │   ├── src/
-│   │   ├── routes/
-│   │   │   └── cv.ts       # Routes API (génération, amélioration, PDF)
-│   │   ├── services/
-│   │   │   ├── ai.ts       # Intégration Google Gemini
-│   │   │   └── pdf.ts      # Génération PDF (Puppeteer)
-│   │   ├── templates/
-│   │   │   └── cv.ts       # Templates HTML des CV
-│   │   └── index.ts        # Point d'entrée serveur
-│   ├── puppeteer.config.cjs  # Config cache Chrome (Render)
-│   ├── .env.example
-│   ├── tsconfig.json
+│   │   ├── data/           # devSkillCategories.json
+│   │   ├── routes/cv.ts
+│   │   ├── services/       # ai.ts, pdf.ts
+│   │   ├── templates/cv.ts # HTML PDF (classic, classic_dev, creative)
+│   │   └── utils/          # classifyDevSkills, descriptionHtml, dateDuration…
+│   ├── puppeteer.config.cjs
 │   └── package.json
 │
-├── package.json            # Scripts racine (concurrently)
+├── package.json            # Scripts racine (dev, ci, test)
 └── README.md
 ```
 
 ## Installation
 
 ```bash
-# Cloner le projet
-git clone https://github.com/votre-username/cvforge-ai.git
+git clone https://github.com/OliviaG-dev/CVForgeAI.git
 cd cvforge-ai
 
-# Installer toutes les dépendances (racine + client + server)
 npm run install:all
 
-# Installer Chrome pour Puppeteer (requis pour l'aperçu et l'export PDF)
 cd server && npx puppeteer browsers install chrome && cd ..
 
-# Configurer les variables d'environnement du serveur
 cp server/.env.example server/.env
-# Puis ajouter votre clé API Gemini dans server/.env
-# Obtenir une clé gratuite : https://aistudio.google.com/apikey
+# Ajouter GEMINI_API_KEY : https://aistudio.google.com/apikey
 ```
 
 ## Lancement
 
 ```bash
-# Lancer client + serveur en parallèle
 npm run dev
-
-# Ou séparément
-npm run dev:client    # Frontend sur http://localhost:5173
-npm run dev:server    # Backend sur http://localhost:3001
+# Client : http://localhost:5173
+# API   : http://localhost:3001
 ```
 
 ## API Endpoints
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| `GET` | `/api/health` | Vérifier que le serveur fonctionne |
-| `POST` | `/api/cv/generate` | Générer un CV complet |
-| `POST` | `/api/cv/improve` | Améliorer une description |
-| `POST` | `/api/cv/pdf` | Générer et télécharger le CV en PDF |
+| `GET` | `/api/health` | Santé du serveur |
+| `POST` | `/api/cv/generate` | Générer un CV (JSON) |
+| `POST` | `/api/cv/improve` | Améliorer une description (`senior: true` pour puces profil senior) |
+| `POST` | `/api/cv/pdf` | Générer le PDF |
 
 ## Scripts disponibles
 
 | Commande | Description |
 |----------|-------------|
-| `npm run dev` | Lance client et serveur en parallèle |
-| `npm run dev:client` | Lance le frontend Vite |
-| `npm run dev:server` | Lance le backend Express |
-| `npm run build` | Build de production du client |
-| `npm run lint` | ESLint sur le client |
-| `npm run typecheck` | Vérification TypeScript du serveur (sans Puppeteer) |
-| `npm run ci` | Pipeline locale : lint + typecheck + build client |
-| `npm run install:all` | Installe les dépendances client et serveur |
+| `npm run dev` | Client + serveur en parallèle |
+| `npm run build` | Build production du client |
+| `npm run lint` | ESLint (client) |
+| `npm run typecheck` | TypeScript serveur (`tsc --noEmit`) |
+| `npm run test` | Tests Vitest (client + server) |
+| `npm run ci` | Lint + typecheck + tests + build client |
+| `npm run install:all` | Installe client + server |
 
-Pour le serveur : `npm run build --prefix server` (installe Chrome + compile TypeScript).
+Serveur : `npm run build --prefix server` (Chrome + `tsc` pour prod).
+
+Tests unitaires ciblés :
+
+- **Durées** : `dateDuration` (mois inclusifs, poste actuel, formation en cours)
+- **Puces / descriptions** : `descriptionHtml` (format senior, échappement HTML)
+- **Langues** : `formatLanguage` (PDF), `language` (formulaire anglais)
+- **Compétences dev** : `classifyDevSkills` + `devSkillCategories.json`
 
 ## CI/CD
 
-Un workflow GitHub Actions (`.github/workflows/ci.yml`) s'exécute sur chaque push et pull request vers `master` / `main` :
+Workflow `.github/workflows/ci.yml` sur `push` / `pull_request` vers `master` / `main` :
 
-1. Install des dépendances (`npm ci` dans `client/` et `server/`)
-2. Lint du frontend
-3. Typecheck du backend (`tsc --noEmit`, sans téléchargement Chrome)
-4. Build de production du client
+1. `npm ci` (client + server)
+2. Lint client
+3. Typecheck server
+4. Tests server + client (Vitest)
+5. Build client
 
-En local, reproduire la CI : `npm run ci` (après `npm run install:all`).
+En local : `npm run ci`
+
+Recommandé sur GitHub : **ruleset** sur `master` (PR obligatoire + statut CI vert).
 
 ## Déploiement (Render)
 
-Le projet est configuré pour Render.com. Le fichier `puppeteer.config.cjs` stocke Chrome dans le projet pour que le PDF fonctionne en production.
+- **Root Directory** : `server` (backend)
+- **Build** : `npm install && npm run build`
+- **Start** : `npm run start`
 
-- **Root Directory** : `server` (si service backend séparé)
-- **Build Command** : `npm install && npm run build`
-- **Start Command** : `npm run start`
+`puppeteer.config.cjs` : cache Chrome pour le PDF en production.
 
 ## Objectif du projet
 
-CVForge AI est un projet portfolio conçu pour démontrer :
-
-- L'intégration d'une API d'intelligence artificielle
-- La conception d'une application web moderne
-- La structuration d'un projet full-stack en monorepo
-- La génération de PDF côté serveur avec Puppeteer
-- La gestion de formulaires complexes (accordéons, modales de confirmation)
-- La normalisation et déduplication de données
+- Intégration IA (Gemini)
+- App React + API Express en monorepo
+- PDF serveur (Puppeteer)
+- Formulaires complexes (accordéons, modales, brouillon localStorage)
+- Logique métier testée (utils + CI)
 
 ## Licence
 
