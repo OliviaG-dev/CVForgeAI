@@ -120,9 +120,23 @@ npm run dev:server    # Backend sur http://localhost:3001
 | `npm run dev:client` | Lance le frontend Vite |
 | `npm run dev:server` | Lance le backend Express |
 | `npm run build` | Build de production du client |
+| `npm run lint` | ESLint sur le client |
+| `npm run typecheck` | Vérification TypeScript du serveur (sans Puppeteer) |
+| `npm run ci` | Pipeline locale : lint + typecheck + build client |
 | `npm run install:all` | Installe les dépendances client et serveur |
 
 Pour le serveur : `npm run build --prefix server` (installe Chrome + compile TypeScript).
+
+## CI/CD
+
+Un workflow GitHub Actions (`.github/workflows/ci.yml`) s'exécute sur chaque push et pull request vers `master` / `main` :
+
+1. Install des dépendances (`npm ci` dans `client/` et `server/`)
+2. Lint du frontend
+3. Typecheck du backend (`tsc --noEmit`, sans téléchargement Chrome)
+4. Build de production du client
+
+En local, reproduire la CI : `npm run ci` (après `npm run install:all`).
 
 ## Déploiement (Render)
 
