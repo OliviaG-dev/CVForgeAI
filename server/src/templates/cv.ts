@@ -1,6 +1,7 @@
 import { classifySkillsForClassicDev } from "../utils/classifyDevSkills.js";
 import { computeDurationLabel } from "../utils/dateDuration.js";
 import { descriptionToHtml } from "../utils/descriptionHtml.js";
+import { formatLanguageLevelDetail } from "../utils/formatLanguage.js";
 
 interface PersonalInfo {
   firstName: string;
@@ -63,6 +64,7 @@ interface Language {
   id: string;
   language: string;
   level: string;
+  englishContexts?: string[];
 }
 
 interface Certification {
@@ -946,7 +948,12 @@ function generateClassicCVHTML(data: CVData): string {
   <div class="section">
     <div class="section__title">Langues</div>
     <div class="langs">
-      ${languages.map((l) => `<span><span class="lang__name">${esc(l.language)}</span><span class="lang__lvl">(${esc(l.level)})</span></span>`).join("")}
+      ${languages
+        .map((l) => {
+          const lvl = formatLanguageLevelDetail(l.level, l.englishContexts);
+          return `<span><span class="lang__name">${esc(l.language)}</span><span class="lang__lvl">(${esc(lvl)})</span></span>`;
+        })
+        .join("")}
     </div>
   </div>`
       : ""
@@ -1674,7 +1681,12 @@ function generateCreativeCVHTML(data: CVData): string {
     <div class="r-section">
       <div class="r-section__label">Langues</div>
       <div class="r-langs">
-        ${languages.map((l) => `<div class="r-lang"><span class="r-lang__name">${esc(l.language)}</span> : <span class="r-lang__lvl">${esc(l.level)}</span></div>`).join("")}
+        ${languages
+          .map((l) => {
+            const lvl = formatLanguageLevelDetail(l.level, l.englishContexts);
+            return `<div class="r-lang"><span class="r-lang__name">${esc(l.language)}</span> : <span class="r-lang__lvl">${esc(lvl)}</span></div>`;
+          })
+          .join("")}
       </div>
     </div>`
         : ""
