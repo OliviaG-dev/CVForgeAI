@@ -1,3 +1,7 @@
+import { classifySkillsForClassicDev } from "../utils/classifyDevSkills.js";
+import { computeDurationLabel } from "../utils/dateDuration.js";
+import { descriptionToHtml } from "../utils/descriptionHtml.js";
+
 interface PersonalInfo {
   firstName: string;
   lastName: string;
@@ -21,6 +25,8 @@ interface Experience {
   endDate: string;
   current: boolean;
   description: string;
+  /** Mise en page senior : puces, titre en gras avant « : » */
+  structuredDescription?: boolean;
   projectLink: string;
   technicalSkills: string[];
   tools: string[];
@@ -44,6 +50,7 @@ interface Project {
   id: string;
   name: string;
   description: string;
+  structuredDescription?: boolean;
   url: string;
   startDate: string;
   endDate: string;
@@ -65,18 +72,26 @@ interface Certification {
   date: string;
 }
 
-type AccentColor = 'blue' | 'green' | 'orange' | 'red' | 'pink' | 'violet' | 'black' | 'teal';
-type CVTemplate = 'classic' | 'classic_dev' | 'creative';
+type AccentColor =
+  | "blue"
+  | "green"
+  | "orange"
+  | "red"
+  | "pink"
+  | "violet"
+  | "black"
+  | "teal";
+type CVTemplate = "classic" | "classic_dev" | "creative";
 
 const COLOR_MAP: Record<AccentColor, string> = {
-  blue:   '#2563eb',
-  teal:   '#0d9488',
-  green:  '#16a34a',
-  orange: '#ea580c',
-  red:    '#dc2626',
-  pink:   '#db2777',
-  violet: '#7c3aed',
-  black:  '#1f2937',
+  blue: "#2563eb",
+  teal: "#0d9488",
+  green: "#16a34a",
+  orange: "#ea580c",
+  red: "#dc2626",
+  pink: "#db2777",
+  violet: "#7c3aed",
+  black: "#1f2937",
 };
 
 interface CVData {
@@ -96,72 +111,150 @@ interface CVData {
 }
 
 const MONTHS = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+  "Janvier",
+  "Février",
+  "Mars",
+  "Avril",
+  "Mai",
+  "Juin",
+  "Juillet",
+  "Août",
+  "Septembre",
+  "Octobre",
+  "Novembre",
+  "Décembre",
 ];
 
 function esc(str: string): string {
   return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function formatDate(date: string): string {
-  if (!date) return '';
-  const [year, month] = date.split('-');
+  if (!date) return "";
+  const [year, month] = date.split("-");
   if (!month) return year;
   return `${MONTHS[parseInt(month, 10) - 1]} ${year}`;
 }
 
-function dateRange(start: string, end: string, current?: boolean): string {
+type DateRangeOptions = {
+  current?: boolean;
+  /** Formation en cours : pas de date de fin → jusqu'à aujourd'hui */
+  ongoingIfNoEnd?: boolean;
+  /** Ajoute « (2 ans et 3 mois) » si calcul possible */
+  withDuration?: boolean;
+};
+
+function dateRange(
+  start: string,
+  end: string,
+  options?: boolean | DateRangeOptions,
+): string {
+  const opts: DateRangeOptions =
+    typeof options === "boolean" ? { current: options } : options ?? {};
+  const ongoing = opts.ongoingIfNoEnd && !!start && !end;
   const s = formatDate(start);
-  const e = current ? "Aujourd'hui" : formatDate(end);
-  if (!s && !e) return '';
-  if (!s) return e;
-  if (!e) return s;
-  return `${s} — ${e}`;
+  const e =
+    opts.current || ongoing
+      ? "Aujourd'hui"
+      : formatDate(end);
+  if (!s && !e) return "";
+  let label: string;
+  if (!s) label = e;
+  else if (!e) label = s;
+  else label = `${s} — ${e}`;
+
+  if (!opts.withDuration || !start) return label;
+
+  const duration = computeDurationLabel(start, end, {
+    current: opts.current,
+    ongoingIfNoEnd: opts.ongoingIfNoEnd,
+  });
+  if (!duration) return label;
+  return `${label} (${duration})`;
+}
+
+function experienceDateRange(start: string, end: string, current?: boolean): string {
+  return dateRange(start, end, { current, withDuration: true });
+}
+
+function educationDateRange(start: string, end: string): string {
+  return dateRange(start, end, { ongoingIfNoEnd: true, withDuration: true });
 }
 
 function cleanUrl(url: string): string {
-  return url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+  return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 }
 
-function descriptionToHtml(desc: string): string {
-  const lines = desc.split('\n').map(l => l.trim()).filter(Boolean);
-  if (lines.length === 0) return '';
-  const items = lines.map(l => `<li>${esc(l.replace(/^[-•–]\s*/, ''))}</li>`).join('');
-  return `<ul>${items}</ul>`;
+/** Entreprise / école + ville (ville plus discrète) — template classique */
+function entryOrgCityHtml(organization: string, city: string): string {
+  const org = organization?.trim() || "";
+  const c = city?.trim() || "";
+  if (!org && !c) return "";
+  let html = "";
+  if (org) html += ` <span class="entry__at">— ${esc(org)}</span>`;
+  if (c) {
+    html += org
+      ? `<span class="entry__city">, ${esc(c)}</span>`
+      : ` <span class="entry__city">— ${esc(c)}</span>`;
+  }
+  return html;
 }
 
-type CreativeDensity = 'sparse' | 'low' | 'medium' | 'dense' | 'compact';
+/** Entreprise / école + ville — template créatif */
+function timelineOrgCityHtml(organization: string, city: string): string {
+  const org = organization?.trim() || "";
+  const c = city?.trim() || "";
+  if (!org && !c) return "";
+  if (org && c) {
+    return `<div class="timeline-sub">${esc(org)}<span class="timeline-city">, ${esc(c)}</span></div>`;
+  }
+  if (org) return `<div class="timeline-sub">${esc(org)}</div>`;
+  return `<div class="timeline-sub"><span class="timeline-city">${esc(c)}</span></div>`;
+}
 
-function computeCreativeContentDensity(data: CVData): { density: CreativeDensity; score: number } {
+type CreativeDensity = "sparse" | "low" | "medium" | "dense" | "compact";
+
+function computeCreativeContentDensity(data: CVData): {
+  density: CreativeDensity;
+  score: number;
+} {
   const exp = data.experiences;
   const proj = data.projects || [];
   const edu = data.education;
-  const descLen = [...exp, ...proj].reduce((s, x) => s + (x.description || '').length, 0);
+  const descLen = [...exp, ...proj].reduce(
+    (s, x) => s + (x.description || "").length,
+    0,
+  );
   const score =
-    exp.length * 5 + proj.length * 5 + edu.length * 4 +
+    exp.length * 5 +
+    proj.length * 5 +
+    edu.length * 4 +
     (data.technicalSkills.length + data.tools.length + data.softSkills.length) +
-    data.languages.length + data.certifications.length + data.interests.length +
+    data.languages.length +
+    data.certifications.length +
+    data.interests.length +
     Math.floor(descLen / 80);
   let density: CreativeDensity;
-  if (score < 8) density = 'sparse';
-  else if (score < 18) density = 'low';
-  else if (score < 35) density = 'medium';
-  else if (score < 55) density = 'dense';
-  else density = 'compact';
+  if (score < 8) density = "sparse";
+  else if (score < 18) density = "low";
+  else if (score < 35) density = "medium";
+  else if (score < 55) density = "dense";
+  else density = "compact";
   return { density, score };
 }
 
-function sortByStartDateDesc<T extends { startDate: string; current?: boolean }>(items: T[]): T[] {
+function sortByStartDateDesc<
+  T extends { startDate: string; current?: boolean },
+>(items: T[]): T[] {
   return [...items].sort((a, b) => {
     if (a.current && !b.current) return -1;
     if (!a.current && b.current) return 1;
-    const dateA = a.startDate || '';
-    const dateB = b.startDate || '';
+    const dateA = a.startDate || "";
+    const dateB = b.startDate || "";
     if (!dateA && !dateB) return 0;
     if (!dateA) return 1;
     if (!dateB) return -1;
@@ -170,191 +263,127 @@ function sortByStartDateDesc<T extends { startDate: string; current?: boolean }>
 }
 
 export function generateCVHTMLForTemplate(data: CVData): string {
-  if (data.template === 'creative') return generateCreativeCVHTML(data);
+  if (data.template === "creative") return generateCreativeCVHTML(data);
   return generateClassicCVHTML(data);
 }
 
-type DevSkillBucket = 'mobile' | 'dataviz' | 'ia' | 'backend' | 'frontend' | 'other';
+type ClassicLayoutMode = "compact" | "balanced" | "airy";
 
-function normalizeSkillMatch(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .trim();
-}
+/**
+ * Espacement vertical harmonieux (classique / classique dev).
+ * Le score ne compte pas les lignes de compétences : une section compétences longue
+ * ne doit pas désactiver les marges avant expériences.
+ */
+function computeClassicLayoutSpacing(
+  data: CVData,
+  devSkillRowCount: number,
+  useDevSkills: boolean,
+): { mode: ClassicLayoutMode; fillPage: boolean } {
+  const exp = data.experiences;
+  const descLen = [...exp, ...(data.projects || [])].reduce(
+    (s, x) => s + (x.description || "").length,
+    0,
+  );
+  const bodyScore =
+    exp.length * 10 +
+    (data.projects?.length || 0) * 6 +
+    data.education.length * 4 +
+    Math.floor(descLen / 100);
 
-/** Regroupe les listes du formulaire en lignes « Compétences clés » (template classique dev). */
-function classifySkillsForClassicDev(
-  technicalSkills: string[],
-  tools: string[],
-  softSkills: string[],
-): { label: string; items: string[] }[] {
-  const techIn = technicalSkills.map((s) => s.trim()).filter(Boolean);
-  const toolsIn = tools.map((s) => s.trim()).filter(Boolean);
-  const softIn = softSkills.map((s) => s.trim()).filter(Boolean);
-  const seen = new Set<string>();
-  const buckets: Record<DevSkillBucket, Set<string>> = {
-    mobile: new Set(),
-    dataviz: new Set(),
-    ia: new Set(),
-    backend: new Set(),
-    frontend: new Set(),
-    other: new Set(),
-  };
-  const methodology = new Set<string>();
+  const hasDevSkillsBlock = useDevSkills && devSkillRowCount > 0;
 
-  const addBucket = (bucket: DevSkillBucket, raw: string) => {
-    const key = normalizeSkillMatch(raw);
-    if (!key || seen.has(key)) return;
-    seen.add(key);
-    buckets[bucket].add(raw.trim());
-  };
-
-  const classifyTech = (raw: string): DevSkillBucket | null => {
-    const n = normalizeSkillMatch(raw);
-    if (!n) return null;
-    if (/\breact\s*native\b/.test(n) || /\bionic\b/.test(n) || /\bexpo\b/.test(n)) return 'mobile';
-    if (/\bd3\.?js?\b/.test(n) || n.includes('chart.js') || n.includes('highcharts')) return 'dataviz';
-    if (
-      /\bgemini\b/.test(n) ||
-      /\bpuppeteer\b/.test(n) ||
-      /\bcursor\b/.test(n) ||
-      /\bopenai\b/.test(n) ||
-      /\bchatgpt\b/.test(n) ||
-      n === 'ia' ||
-      /\bllm\b/.test(n) ||
-      n.includes('langchain') ||
-      n.includes('generation de contenu') ||
-      /\bprompting\b/.test(n) ||
-      n.includes('prompt engineering') ||
-      n.includes('ingenierie des prompts') ||
-      n.includes('ingenierie de prompt') ||
-      (n.includes('ingenierie') && n.includes('prompt')) ||
-      /\bprompt[-\s/]+ia\b/.test(n) ||
-      /\bia[-\s/]+prompt\b/.test(n) ||
-      /\bworkflows?\s+ia\b/.test(n) ||
-      /\bia\s+workflows?\b/.test(n)
-    )
-      return 'ia';
-    if (
-      /\bnode\.?js?\b/.test(n) ||
-      /\bexpress\b/.test(n) ||
-      /\bnest(?:js)?\b/.test(n) ||
-      /\bsymfony\b/.test(n) ||
-      /\bsymphony\b/.test(n) ||
-      /\bdjango\b/.test(n) ||
-      /\bfastapi\b/.test(n) ||
-      /\bphp\b/.test(n) ||
-      /\bgraphql\b/.test(n) ||
-      n.includes('microservice') ||
-      (n.includes('api') && (n.includes('rest') || /\bapis?\b/.test(n))) ||
-      /\bsupabase\b/.test(n) ||
-      /\bpostgres\b/.test(n) ||
-      /\bpostgresql\b/.test(n) ||
-      /\bmongodb\b/.test(n) ||
-      /\bprisma\b/.test(n) ||
-      /\bredis\b/.test(n) ||
-      /\bopen\s*data\b/.test(n)
-    )
-      return 'backend';
-    if (
-      /\breact\b/.test(n) ||
-      n.startsWith('vue') ||
-      /\bangular/.test(n) ||
-      /\bsvelte\b/.test(n) ||
-      /\btypescript\b/.test(n) ||
-      /\bjavascript\b/.test(n) ||
-      /\btailwind\b/.test(n) ||
-      /\bbootstrap\b/.test(n) ||
-      /\bsass\b/.test(n) ||
-      n.includes('zustand') ||
-      n.includes('recharts') ||
-      /\beslint\b/.test(n) ||
-      /\bwebpack\b/.test(n) ||
-      /\bvite\b/.test(n) ||
-      /\bvitest\b/.test(n) ||
-      /\bjest\b/.test(n) ||
-      /\bnext\.?js?\b/.test(n) ||
-      /\bnuxt\b/.test(n) ||
-      /\bhtml5?\b/.test(n) ||
-      /\bcss3?\b/.test(n) ||
-      n === 'html' ||
-      n === 'css' ||
-      n.includes('responsive design') ||
-      n.includes('design responsive')
-    )
-      return 'frontend';
-    return null;
-  };
-
-  for (const raw of [...techIn, ...toolsIn]) {
-    const bucket = classifyTech(raw);
-    if (bucket) addBucket(bucket, raw);
-    else addBucket('other', raw);
+  if (hasDevSkillsBlock) {
+    if (bodyScore >= 55) return { mode: "balanced", fillPage: false };
+    return { mode: "airy", fillPage: bodyScore < 38 };
   }
 
-  for (const raw of softIn) {
-    const n = normalizeSkillMatch(raw);
-    if (!n || seen.has(n)) continue;
-    const softAsTech = classifyTech(raw);
-    if (softAsTech || n.includes('generation de contenu')) {
-      addBucket(softAsTech ?? 'ia', raw);
-      continue;
-    }
-    seen.add(n);
-    methodology.add(raw.trim());
-  }
-
-  const order: { key: DevSkillBucket; label: string }[] = [
-    { key: 'frontend', label: 'Front-end' },
-    { key: 'backend', label: 'Back-end' },
-    { key: 'ia', label: 'IA / automatisation' },
-    { key: 'dataviz', label: 'Data viz' },
-    { key: 'mobile', label: 'Mobile' },
-    { key: 'other', label: 'Autres' },
-  ];
-
-  const rows: { label: string; items: string[] }[] = [];
-  for (const { key, label } of order) {
-    const items = [...buckets[key]].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
-    if (items.length > 0) rows.push({ label, items });
-  }
-  if (methodology.size > 0) {
-    const items = [...methodology].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
-    rows.push({ label: 'Méthodologies & savoir-être', items });
-  }
-  return rows;
+  if (bodyScore >= 50) return { mode: "compact", fillPage: false };
+  if (bodyScore >= 28) return { mode: "balanced", fillPage: false };
+  if (bodyScore >= 14) return { mode: "airy", fillPage: bodyScore < 34 };
+  return { mode: "airy", fillPage: true };
 }
 
 function generateClassicCVHTML(data: CVData): string {
-  const useDevSkills = data.template === 'classic_dev';
-  const { personalInfo: p, technicalSkills, tools, softSkills, languages, certifications, interests } = data;
+  const useDevSkills = data.template === "classic_dev";
+  const {
+    personalInfo: p,
+    technicalSkills,
+    tools,
+    softSkills,
+    languages,
+    certifications,
+    interests,
+  } = data;
   const experiences = sortByStartDateDesc(data.experiences);
   const projects = sortByStartDateDesc(data.projects || []);
   const education = sortByStartDateDesc(data.education);
-  const accent = COLOR_MAP[data.accentColor || 'blue'];
+  const accent = COLOR_MAP[data.accentColor || "blue"];
 
-  const ico = (svg: string) => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg>`;
-  const icoMail = ico('<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>');
-  const icoPhone = ico('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.36 1.6.68 2.36a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.32 1.55.55 2.36.68A2 2 0 0 1 22 16.92z"/>');
-  const icoPin = ico('<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>');
-  const icoLinkedin = ico('<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>');
-  const icoGlobe = ico('<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>');
-  const icoGithub = ico('<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4"/><path d="M9 18c-4.51 2-5-2-7-2"/>');
+  const ico = (svg: string) =>
+    `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg>`;
+  const icoMail = ico(
+    '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  );
+  const icoPhone = ico(
+    '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.36 1.6.68 2.36a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.32 1.55.55 2.36.68A2 2 0 0 1 22 16.92z"/>',
+  );
+  const icoPin = ico(
+    '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  );
+  const icoLinkedin = ico(
+    '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>',
+  );
+  const icoGlobe = ico(
+    '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+  );
+  const icoGithub = ico(
+    '<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4"/><path d="M9 18c-4.51 2-5-2-7-2"/>',
+  );
 
   const contactItems: string[] = [];
-  if (p.email) contactItems.push(`<a href="mailto:${esc(p.email)}" class="info-item">${icoMail}<span>${esc(p.email)}</span></a>`);
-  if (p.phone) contactItems.push(`<span class="info-item">${icoPhone}<span>${esc(p.phone)}</span></span>`);
-  if (p.city) contactItems.push(`<a href="https://www.google.com/maps/search/${encodeURIComponent(p.city)}" class="info-item">${icoPin}<span>${esc(p.city)}</span></a>`);
-  if (p.linkedin) contactItems.push(`<a href="${esc(p.linkedin)}" class="info-item">${icoLinkedin}<span>LinkedIn</span></a>`);
-  if (p.portfolio) contactItems.push(`<a href="${esc(p.portfolio)}" class="info-item">${icoGlobe}<span>Portfolio</span></a>`);
-  if (p.github) contactItems.push(`<a href="${esc(p.github)}" class="info-item">${icoGithub}<span>GitHub</span></a>`);
+  if (p.email)
+    contactItems.push(
+      `<a href="mailto:${esc(p.email)}" class="info-item">${icoMail}<span>${esc(p.email)}</span></a>`,
+    );
+  if (p.phone)
+    contactItems.push(
+      `<span class="info-item">${icoPhone}<span>${esc(p.phone)}</span></span>`,
+    );
+  if (p.city)
+    contactItems.push(
+      `<a href="https://www.google.com/maps/search/${encodeURIComponent(p.city)}" class="info-item">${icoPin}<span>${esc(p.city)}</span></a>`,
+    );
+  if (p.linkedin)
+    contactItems.push(
+      `<a href="${esc(p.linkedin)}" class="info-item">${icoLinkedin}<span>LinkedIn</span></a>`,
+    );
+  if (p.portfolio)
+    contactItems.push(
+      `<a href="${esc(p.portfolio)}" class="info-item">${icoGlobe}<span>Portfolio</span></a>`,
+    );
+  if (p.github)
+    contactItems.push(
+      `<a href="${esc(p.github)}" class="info-item">${icoGithub}<span>GitHub</span></a>`,
+    );
   const contactLine = contactItems.join('<span class="sep">•</span>');
 
-  const hasSkills = technicalSkills.length > 0 || tools.length > 0 || softSkills.length > 0;
-  const devSkillRows = useDevSkills ? classifySkillsForClassicDev(technicalSkills, tools, softSkills) : [];
+  const hasSkills =
+    technicalSkills.length > 0 || tools.length > 0 || softSkills.length > 0;
+  const devSkillRows = useDevSkills
+    ? classifySkillsForClassicDev(technicalSkills, tools, softSkills)
+    : [];
+  const hasDevSkillsBlock =
+    hasSkills && useDevSkills && devSkillRows.length > 0;
+  const layout = computeClassicLayoutSpacing(
+    data,
+    devSkillRows.length,
+    useDevSkills,
+  );
   const hasExperiences = experiences.length > 0;
+  const useLayoutSpacing = layout.mode !== "compact";
+  const showGapAfterHeader =
+    useLayoutSpacing && hasDevSkillsBlock && (p.summary || true);
+  const showGapBeforeExperiences = hasDevSkillsBlock && hasExperiences;
   const hasProjects = (projects || []).length > 0;
   const hasEducation = education.length > 0;
   const hasLanguages = languages.length > 0;
@@ -379,6 +408,132 @@ function generateClassicCVHTML(data: CVData): string {
     max-width: 100%;
     overflow-wrap: break-word;
     word-wrap: break-word;
+  }
+
+  .cv-flow {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+  }
+
+  .cv-flow--fill {
+    min-height: 100vh;
+  }
+
+  .cv-gap {
+    display: block;
+    flex: 0 0 auto;
+    width: 100%;
+    height: 0;
+    overflow: hidden;
+  }
+
+  /* Peu d'espace résumé → compétences */
+  .cv-body--balanced .cv-gap--after-header,
+  .cv-body--airy .cv-gap--after-header {
+    height: 0;
+  }
+
+  /* Remplit le bas de la page 1 avant le saut de page Expériences */
+  .cv-body.has-dev-skills .cv-gap--before-experiences {
+    flex: 1 1 auto;
+    min-height: 48pt;
+    height: auto;
+    max-height: none;
+  }
+
+  .cv-flow--fill .cv-gap--after-header {
+    height: 0;
+    flex: 0 0 auto;
+    min-height: 0;
+    max-height: 0;
+  }
+
+  .cv-flow--fill.has-dev-skills-page1 {
+    min-height: 100vh;
+  }
+
+  .cv-body--balanced {
+    --space-header-bottom: 26pt;
+    --space-after-profession: 28pt;
+    --space-after-name: 36pt;
+    --space-after-bar: 30pt;
+    --space-after-contact: 32pt;
+    --space-before-summary: 28pt;
+    --space-after-summary: 6pt;
+    --space-before-skills: 6pt;
+    --space-after-skills: 20pt;
+  }
+
+  .cv-body--airy {
+    --space-header-bottom: 32pt;
+    --space-after-profession: 34pt;
+    --space-after-name: 46pt;
+    --space-after-bar: 38pt;
+    --space-after-contact: 42pt;
+    --space-before-summary: 36pt;
+    --space-after-summary: 8pt;
+    --space-before-skills: 8pt;
+    --space-after-skills: 24pt;
+  }
+
+  .cv-body--balanced.has-dev-skills .header {
+    padding-top: 14pt;
+  }
+
+  .cv-body--airy.has-dev-skills .header {
+    padding-top: 24pt;
+  }
+
+  /* Expériences toujours à partir de la page 2 (template dev + compétences clés) */
+  .cv-body.has-dev-skills .section--skills {
+    page-break-after: avoid;
+    break-after: avoid-page;
+  }
+
+  .cv-body.has-dev-skills .section--experiences {
+    page-break-before: always;
+    break-before: page;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .cv-body--balanced .header,
+  .cv-body--airy .header {
+    margin-bottom: var(--space-header-bottom, 20pt);
+  }
+
+  .cv-body--balanced .header__profession,
+  .cv-body--airy .header__profession {
+    margin-bottom: var(--space-after-profession, 4pt);
+  }
+
+  .cv-body--balanced .header__name,
+  .cv-body--airy .header__name {
+    margin-bottom: var(--space-after-name, 10pt);
+  }
+
+  .cv-body--balanced .header__bar,
+  .cv-body--airy .header__bar {
+    margin-bottom: var(--space-after-bar, 10pt);
+  }
+
+  .cv-body--balanced .header__info,
+  .cv-body--airy .header__info {
+    margin-bottom: var(--space-after-contact, 0);
+  }
+
+  .cv-body--balanced .header__summary,
+  .cv-body--airy .header__summary {
+    margin-top: var(--space-before-summary, 8pt);
+    padding-top: 0;
+    margin-bottom: var(--space-after-summary, 0);
+  }
+
+  .cv-body--balanced .section--skills,
+  .cv-body--airy .section--skills {
+    margin-top: var(--space-before-skills, 0);
+    margin-bottom: var(--space-after-skills, 18pt);
   }
 
   a { color: var(--accent); text-decoration: none; }
@@ -479,7 +634,9 @@ function generateClassicCVHTML(data: CVData): string {
     line-height: 1.5;
   }
 
-  .skills-cat {
+  /* Libellés « Compétences clés » — style dédié, indépendant des puces missions/projets */
+  .skills-grid .skills-cat,
+  .skills-grid--dev .skills-cat {
     font-weight: 700;
     color: #374151;
     padding-right: 8pt;
@@ -536,6 +693,12 @@ function generateClassicCVHTML(data: CVData): string {
     color: #4b5563;
   }
 
+  .entry__city {
+    font-size: 8pt;
+    font-weight: 400;
+    color: #9ca3af;
+  }
+
   .entry__dates {
     font-size: 9pt;
     color: #6b7280;
@@ -563,6 +726,35 @@ function generateClassicCVHTML(data: CVData): string {
     overflow-wrap: break-word;
     word-wrap: break-word;
     word-break: break-word;
+  }
+
+  .desc-list--structured {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 5pt;
+  }
+
+  .desc-list--structured li {
+    position: relative;
+    padding-left: 11pt;
+    margin-bottom: 5pt;
+    line-height: 1.4;
+    color: #4b5563;
+  }
+
+  .desc-list--structured li::before {
+    content: "●";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 7pt;
+    top: 1.5pt;
+  }
+
+  .entry__desc .desc-list--structured li strong {
+    font-weight: 700;
+    color: #4b5563;
+    letter-spacing: 0.02em;
   }
 
   .entry li::marker { color: var(--accent); }
@@ -627,125 +819,173 @@ function generateClassicCVHTML(data: CVData): string {
   }
 </style>
 </head>
-<body>
+<body class="cv-body cv-body--${layout.mode}${layout.fillPage ? " cv-body--fill" : ""}${hasDevSkillsBlock ? " has-dev-skills" : ""}">
+
+  <div class="cv-flow${layout.fillPage || (hasDevSkillsBlock && hasExperiences) ? " cv-flow--fill" : ""}${hasDevSkillsBlock && hasExperiences ? " has-dev-skills-page1" : ""}">
 
   <!-- Header -->
   <div class="header">
-    ${p.title ? `<div class="header__profession">${esc(p.title)}</div>` : ''}
+    ${p.title ? `<div class="header__profession">${esc(p.title)}</div>` : ""}
     <div class="header__name">${esc(p.firstName)} ${esc(p.lastName)}</div>
     <div class="header__bar"></div>
-    ${contactLine ? `<div class="header__info">${contactLine}</div>` : ''}
-    ${p.summary ? `<div class="header__summary">${esc(p.summary)}</div>` : ''}
+    ${contactLine ? `<div class="header__info">${contactLine}</div>` : ""}
+    ${p.summary ? `<div class="header__summary">${esc(p.summary)}</div>` : ""}
   </div>
 
-  ${hasSkills && useDevSkills && devSkillRows.length > 0 ? `
+  ${showGapAfterHeader ? '<div class="cv-gap cv-gap--after-header"></div>' : ""}
+
+  ${
+    hasSkills && useDevSkills && devSkillRows.length > 0
+      ? `
   <!-- Compétences clés (classique dev) -->
-  <div class="section">
+  <div class="section section--skills">
     <div class="section__title section__title--dev-skills">COMPÉTENCES CLÉS</div>
     <div class="skills-grid skills-grid--dev">
       ${devSkillRows
         .map(
           ({ label, items }) =>
-            `<div class="skills-cat">${esc(label)} :</div><div class="skills-val">${items.map(esc).join(', ')}</div>`,
+            `<div class="skills-cat">${esc(label)} :</div><div class="skills-val">${items.map(esc).join(", ")}</div>`,
         )
-        .join('')}
+        .join("")}
     </div>
-  </div>` : ''}
-  ${hasSkills && (!useDevSkills || devSkillRows.length === 0) ? `
+  </div>`
+      : ""
+  }
+  ${
+    hasSkills && (!useDevSkills || devSkillRows.length === 0)
+      ? `
   <!-- Compétences -->
-  <div class="section">
+  <div class="section section--skills">
     <div class="section__title">Compétences</div>
     <div class="skills-grid">
-      ${technicalSkills.length > 0 ? `<div class="skills-cat">Compétences techniques</div><div class="skills-val">${technicalSkills.map(esc).join(', ')}</div>` : ''}
-      ${tools.length > 0 ? `<div class="skills-cat">Outils</div><div class="skills-val">${tools.map(esc).join(', ')}</div>` : ''}
-      ${softSkills.length > 0 ? `<div class="skills-cat">Compétences transversales</div><div class="skills-val">${softSkills.map(esc).join(', ')}</div>` : ''}
+      ${technicalSkills.length > 0 ? `<div class="skills-cat">Compétences techniques</div><div class="skills-val">${technicalSkills.map(esc).join(", ")}</div>` : ""}
+      ${tools.length > 0 ? `<div class="skills-cat">Outils</div><div class="skills-val">${tools.map(esc).join(", ")}</div>` : ""}
+      ${softSkills.length > 0 ? `<div class="skills-cat">Compétences transversales</div><div class="skills-val">${softSkills.map(esc).join(", ")}</div>` : ""}
     </div>
-  </div>` : ''}
+  </div>`
+      : ""
+  }
 
-  ${hasExperiences ? `
+  ${showGapBeforeExperiences ? '<div class="cv-gap cv-gap--before-experiences"></div>' : ""}
+
+  ${
+    hasExperiences
+      ? `
   <!-- Expériences -->
-  <div class="section">
+  <div class="section section--experiences">
     <div class="section__title">Expériences</div>
-    ${experiences.map(exp => {
-      const loc = [exp.company, exp.city].filter(Boolean).join(', ');
-      return `
+    ${experiences
+      .map((exp) => {
+        return `
     <div class="entry">
       <div class="entry__line1">
-        <span class="entry__role">${esc(exp.position)}${loc ? ` <span class="entry__at">— ${esc(loc)}</span>` : ''}</span>
-        <span class="entry__dates">${dateRange(exp.startDate, exp.endDate, exp.current)}</span>
+        <span class="entry__role">${esc(exp.position)}${entryOrgCityHtml(exp.company, exp.city)}</span>
+        <span class="entry__dates">${experienceDateRange(exp.startDate, exp.endDate, exp.current)}</span>
       </div>
-      ${exp.description ? `<div class="entry__desc">${descriptionToHtml(exp.description)}</div>` : ''}
-      ${[...(exp.technicalSkills || []), ...(exp.tools || [])].length > 0 ? `<div class="entry__skills">${[...(exp.technicalSkills || []), ...(exp.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
-      ${exp.projectLink ? `<div class="entry__link"><a href="${esc(exp.projectLink)}">Voir le projet</a></div>` : ''}
+      ${exp.description ? `<div class="entry__desc">${descriptionToHtml(exp.description, exp.structuredDescription)}</div>` : ""}
+      ${[...(exp.technicalSkills || []), ...(exp.tools || [])].length > 0 ? `<div class="entry__skills">${[...(exp.technicalSkills || []), ...(exp.tools || [])].map((s) => `<span>${esc(s)}</span>`).join("")}</div>` : ""}
+      ${exp.projectLink ? `<div class="entry__link"><a href="${esc(exp.projectLink)}">Voir le projet</a></div>` : ""}
     </div>`;
-    }).join('')}
-  </div>` : ''}
+      })
+      .join("")}
+  </div>`
+      : ""
+  }
 
-  ${hasProjects ? `
+  ${
+    hasProjects
+      ? `
   <!-- Projets -->
   <div class="section">
     <div class="section__title">Projets</div>
-    ${(projects || []).map(proj => {
-      return `
+    ${(projects || [])
+      .map((proj) => {
+        return `
     <div class="entry">
       <div class="entry__line1">
         <span class="entry__role">${esc(proj.name)}</span>
         <span class="entry__dates">${dateRange(proj.startDate, proj.endDate)}</span>
       </div>
-      ${proj.description ? `<div class="entry__desc">${descriptionToHtml(proj.description)}</div>` : ''}
-      ${[...(proj.technicalSkills || []), ...(proj.tools || [])].length > 0 ? `<div class="entry__skills">${[...(proj.technicalSkills || []), ...(proj.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
-      ${proj.url ? `<div class="entry__link"><a href="${esc(proj.url)}">${cleanUrl(proj.url)}</a></div>` : ''}
+      ${proj.description ? `<div class="entry__desc">${descriptionToHtml(proj.description, proj.structuredDescription)}</div>` : ""}
+      ${[...(proj.technicalSkills || []), ...(proj.tools || [])].length > 0 ? `<div class="entry__skills">${[...(proj.technicalSkills || []), ...(proj.tools || [])].map((s) => `<span>${esc(s)}</span>`).join("")}</div>` : ""}
+      ${proj.url ? `<div class="entry__link"><a href="${esc(proj.url)}">${cleanUrl(proj.url)}</a></div>` : ""}
     </div>`;
-    }).join('')}
-  </div>` : ''}
+      })
+      .join("")}
+  </div>`
+      : ""
+  }
 
-  ${hasEducation ? `
+  ${
+    hasEducation
+      ? `
   <!-- Formation -->
   <div class="section">
     <div class="section__title">Formation</div>
-    ${education.map(edu => {
-      const loc = [edu.school, edu.city].filter(Boolean).join(', ');
-      return `
+    ${education
+      .map((edu) => {
+        return `
     <div class="entry">
       <div class="entry__line1">
-        <span class="entry__role">${esc(edu.degree)}${loc ? ` <span class="entry__at">— ${esc(loc)}</span>` : ''}</span>
-        <span class="entry__dates">${dateRange(edu.startDate, edu.endDate)}</span>
+        <span class="entry__role">${esc(edu.degree)}${entryOrgCityHtml(edu.school, edu.city)}</span>
+        <span class="entry__dates">${educationDateRange(edu.startDate, edu.endDate)}</span>
       </div>
-      ${edu.specialty ? `<div class="entry__sub">${esc(edu.specialty)}</div>` : ''}
-      ${[...(edu.technicalSkills || []), ...(edu.tools || [])].length > 0 ? `<div class="entry__skills">${[...(edu.technicalSkills || []), ...(edu.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
+      ${edu.specialty ? `<div class="entry__sub">${esc(edu.specialty)}</div>` : ""}
+      ${[...(edu.technicalSkills || []), ...(edu.tools || [])].length > 0 ? `<div class="entry__skills">${[...(edu.technicalSkills || []), ...(edu.tools || [])].map((s) => `<span>${esc(s)}</span>`).join("")}</div>` : ""}
     </div>`;
-    }).join('')}
-  </div>` : ''}
+      })
+      .join("")}
+  </div>`
+      : ""
+  }
 
-  ${hasLanguages ? `
+  ${
+    hasLanguages
+      ? `
   <!-- Langues -->
   <div class="section">
     <div class="section__title">Langues</div>
     <div class="langs">
-      ${languages.map(l => `<span><span class="lang__name">${esc(l.language)}</span><span class="lang__lvl">(${esc(l.level)})</span></span>`).join('')}
+      ${languages.map((l) => `<span><span class="lang__name">${esc(l.language)}</span><span class="lang__lvl">(${esc(l.level)})</span></span>`).join("")}
     </div>
-  </div>` : ''}
+  </div>`
+      : ""
+  }
 
-  ${hasCertifications ? `
+  ${
+    hasCertifications
+      ? `
   <!-- Certifications -->
   <div class="section">
     <div class="section__title">Certifications</div>
-    ${certifications.map(c => `
+    ${certifications
+      .map(
+        (c) => `
     <div class="cert">
       <span class="cert__name">${esc(c.name)}</span>
-      ${c.organization ? `<span class="cert__org"> — ${esc(c.organization)}</span>` : ''}
-      ${c.date ? `<span class="cert__date"> — ${formatDate(c.date)}</span>` : ''}
-    </div>`).join('')}
-  </div>` : ''}
+      ${c.organization ? `<span class="cert__org"> — ${esc(c.organization)}</span>` : ""}
+      ${c.date ? `<span class="cert__date"> — ${formatDate(c.date)}</span>` : ""}
+    </div>`,
+      )
+      .join("")}
+  </div>`
+      : ""
+  }
 
-  ${hasInterests ? `
+  ${
+    hasInterests
+      ? `
   <!-- Centres d'intérêt -->
   <div class="section">
     <div class="section__title">Centres d'intérêt</div>
-    <div class="interests">${interests.map(esc).join(', ')}</div>
-  </div>` : ''}
+    <div class="interests">${interests.map(esc).join(", ")}</div>
+  </div>`
+      : ""
+  }
 
-  ${data.atsKeywords ? `<div class="ats-hidden">${esc(data.atsKeywords)}</div>` : ''}
+  ${data.atsKeywords ? `<div class="ats-hidden">${esc(data.atsKeywords)}</div>` : ""}
+
+  </div>
 
 </body>
 </html>`;
@@ -754,35 +994,95 @@ function generateClassicCVHTML(data: CVData): string {
 function getCreativeDensityVars(density: CreativeDensity): string {
   const vars: Record<CreativeDensity, Record<string, string>> = {
     sparse: {
-      '--pad-v': '24pt', '--pad-h': '18pt', '--gap': '22pt', '--timeline-mb': '12pt', '--label-mb': '8pt', '--inner-gap': '5pt', '--line-ht': '1.5',
-      '--font-base': '9.5pt', '--font-sm': '8.5pt', '--font-xs': '8pt', '--font-title': '20pt', '--font-subtitle': '11pt',
+      "--pad-v": "24pt",
+      "--pad-h": "18pt",
+      "--gap": "22pt",
+      "--timeline-mb": "12pt",
+      "--label-mb": "8pt",
+      "--inner-gap": "5pt",
+      "--line-ht": "1.5",
+      "--font-base": "9.5pt",
+      "--font-sm": "8.5pt",
+      "--font-xs": "8pt",
+      "--font-title": "20pt",
+      "--font-subtitle": "11pt",
     },
     low: {
-      '--pad-v': '20pt', '--pad-h': '16pt', '--gap': '18pt', '--timeline-mb': '10pt', '--label-mb': '7pt', '--inner-gap': '5pt', '--line-ht': '1.48',
-      '--font-base': '9pt', '--font-sm': '8pt', '--font-xs': '7.5pt', '--font-title': '18pt', '--font-subtitle': '10pt',
+      "--pad-v": "20pt",
+      "--pad-h": "16pt",
+      "--gap": "18pt",
+      "--timeline-mb": "10pt",
+      "--label-mb": "7pt",
+      "--inner-gap": "5pt",
+      "--line-ht": "1.48",
+      "--font-base": "9pt",
+      "--font-sm": "8pt",
+      "--font-xs": "7.5pt",
+      "--font-title": "18pt",
+      "--font-subtitle": "10pt",
     },
     medium: {
-      '--pad-v': '16pt', '--pad-h': '14pt', '--gap': '16pt', '--timeline-mb': '8pt', '--label-mb': '6pt', '--inner-gap': '4pt', '--line-ht': '1.45',
-      '--font-base': '8.5pt', '--font-sm': '7.5pt', '--font-xs': '7pt', '--font-title': '16pt', '--font-subtitle': '9pt',
+      "--pad-v": "16pt",
+      "--pad-h": "14pt",
+      "--gap": "16pt",
+      "--timeline-mb": "8pt",
+      "--label-mb": "6pt",
+      "--inner-gap": "4pt",
+      "--line-ht": "1.45",
+      "--font-base": "8.5pt",
+      "--font-sm": "7.5pt",
+      "--font-xs": "7pt",
+      "--font-title": "16pt",
+      "--font-subtitle": "9pt",
     },
     dense: {
-      '--pad-v': '14pt', '--pad-h': '12pt', '--gap': '14pt', '--timeline-mb': '6pt', '--label-mb': '5pt', '--inner-gap': '4pt', '--line-ht': '1.4',
-      '--font-base': '8pt', '--font-sm': '7pt', '--font-xs': '6.5pt', '--font-title': '15pt', '--font-subtitle': '8.5pt',
+      "--pad-v": "14pt",
+      "--pad-h": "12pt",
+      "--gap": "14pt",
+      "--timeline-mb": "6pt",
+      "--label-mb": "5pt",
+      "--inner-gap": "4pt",
+      "--line-ht": "1.4",
+      "--font-base": "8pt",
+      "--font-sm": "7pt",
+      "--font-xs": "6.5pt",
+      "--font-title": "15pt",
+      "--font-subtitle": "8.5pt",
     },
     compact: {
-      '--pad-v': '12pt', '--pad-h': '10pt', '--gap': '12pt', '--timeline-mb': '5pt', '--label-mb': '4pt', '--inner-gap': '3pt', '--line-ht': '1.35',
-      '--font-base': '7.5pt', '--font-sm': '6.5pt', '--font-xs': '6pt', '--font-title': '14pt', '--font-subtitle': '8pt',
+      "--pad-v": "12pt",
+      "--pad-h": "10pt",
+      "--gap": "12pt",
+      "--timeline-mb": "5pt",
+      "--label-mb": "4pt",
+      "--inner-gap": "3pt",
+      "--line-ht": "1.35",
+      "--font-base": "7.5pt",
+      "--font-sm": "6.5pt",
+      "--font-xs": "6pt",
+      "--font-title": "14pt",
+      "--font-subtitle": "8pt",
     },
   };
-  return Object.entries(vars[density]).map(([k, v]) => `${k}: ${v}`).join('; ');
+  return Object.entries(vars[density])
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("; ");
 }
 
 function generateCreativeCVHTML(data: CVData): string {
-  const { personalInfo: p, technicalSkills, tools, softSkills, languages, certifications, interests } = data;
+  const {
+    personalInfo: p,
+    technicalSkills,
+    tools,
+    softSkills,
+    languages,
+    certifications,
+    interests,
+  } = data;
   const experiences = sortByStartDateDesc(data.experiences);
   const projects = sortByStartDateDesc(data.projects || []);
   const education = sortByStartDateDesc(data.education);
-  const accent = COLOR_MAP[data.accentColor || 'blue'];
+  const accent = COLOR_MAP[data.accentColor || "blue"];
   const { density, score } = computeCreativeContentDensity(data);
   const densityVars = getCreativeDensityVars(density);
 
@@ -795,23 +1095,62 @@ function generateCreativeCVHTML(data: CVData): string {
   const hasCertifications = certifications.length > 0;
   const hasInterests = interests.length > 0;
 
-  const ico = (svg: string) => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg>`;
-  const icoMail = ico('<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>');
-  const icoPhone = ico('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.36 1.6.68 2.36a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.32 1.55.55 2.36.68A2 2 0 0 1 22 16.92z"/>');
-  const icoPin = ico('<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>');
-  const icoLinkedin = ico('<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>');
-  const icoGlobe = ico('<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>');
-  const icoGithub = ico('<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4"/><path d="M9 18c-4.51 2-5-2-7-2"/>');
+  const ico = (svg: string) =>
+    `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svg}</svg>`;
+  const icoMail = ico(
+    '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  );
+  const icoPhone = ico(
+    '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.36 1.6.68 2.36a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.32 1.55.55 2.36.68A2 2 0 0 1 22 16.92z"/>',
+  );
+  const icoPin = ico(
+    '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  );
+  const icoLinkedin = ico(
+    '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>',
+  );
+  const icoGlobe = ico(
+    '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+  );
+  const icoGithub = ico(
+    '<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4"/><path d="M9 18c-4.51 2-5-2-7-2"/>',
+  );
 
   const contactItems: string[] = [];
-  if (p.email) contactItems.push(`<div class="c-contact__item">${icoMail}<span>${esc(p.email)}</span></div>`);
-  if (p.phone) contactItems.push(`<div class="c-contact__item">${icoPhone}<span>${esc(p.phone)}</span></div>`);
-  if (p.city) contactItems.push(`<div class="c-contact__item">${icoPin}<span>${esc(p.city)}</span></div>`);
-  if (p.linkedin) contactItems.push(`<div class="c-contact__item">${icoLinkedin}<a href="${esc(p.linkedin)}">LinkedIn</a></div>`);
-  if (p.github) contactItems.push(`<div class="c-contact__item">${icoGithub}<a href="${esc(p.github)}">GitHub</a></div>`);
-  if (p.portfolio) contactItems.push(`<div class="c-contact__item">${icoGlobe}<a href="${esc(p.portfolio)}">Portfolio</a></div>`);
+  if (p.email)
+    contactItems.push(
+      `<div class="c-contact__item">${icoMail}<span>${esc(p.email)}</span></div>`,
+    );
+  if (p.phone)
+    contactItems.push(
+      `<div class="c-contact__item">${icoPhone}<span>${esc(p.phone)}</span></div>`,
+    );
+  if (p.city)
+    contactItems.push(
+      `<div class="c-contact__item">${icoPin}<span>${esc(p.city)}</span></div>`,
+    );
+  if (p.linkedin)
+    contactItems.push(
+      `<div class="c-contact__item">${icoLinkedin}<a href="${esc(p.linkedin)}">LinkedIn</a></div>`,
+    );
+  if (p.github)
+    contactItems.push(
+      `<div class="c-contact__item">${icoGithub}<a href="${esc(p.github)}">GitHub</a></div>`,
+    );
+  if (p.portfolio)
+    contactItems.push(
+      `<div class="c-contact__item">${icoGlobe}<a href="${esc(p.portfolio)}">Portfolio</a></div>`,
+    );
 
-  const interestColors = ['#e8913a', '#3db8a9', '#7c3aed', '#db2777', '#2563eb', '#16a34a', '#dc2626'];
+  const interestColors = [
+    "#e8913a",
+    "#3db8a9",
+    "#7c3aed",
+    "#db2777",
+    "#2563eb",
+    "#16a34a",
+    "#dc2626",
+  ];
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -916,6 +1255,12 @@ function generateCreativeCVHTML(data: CVData): string {
     word-break: break-word;
   }
 
+  .timeline-city {
+    font-size: var(--font-xs);
+    font-weight: 400;
+    color: #64748b;
+  }
+
   .timeline-desc {
     margin-top: 2pt;
     font-size: var(--font-sm);
@@ -938,6 +1283,34 @@ function generateCreativeCVHTML(data: CVData): string {
   }
 
   .timeline-desc li::marker { color: var(--accent); }
+
+  .timeline-desc .desc-list--structured {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .timeline-desc .desc-list--structured li {
+    position: relative;
+    padding-left: 11pt;
+    margin-bottom: 4pt;
+    line-height: 1.4;
+    color: #94a3b8;
+  }
+
+  .timeline-desc .desc-list--structured li::before {
+    content: "●";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 7pt;
+    top: 1.5pt;
+  }
+
+  .timeline-desc .desc-list--structured li strong {
+    font-weight: 700;
+    color: #cbd5e1;
+    letter-spacing: 0.02em;
+  }
 
   .timeline-link {
     font-size: var(--font-xs);
@@ -1177,120 +1550,170 @@ function generateCreativeCVHTML(data: CVData): string {
 <div class="page">
   <!-- Left column -->
   <div class="left">
-    ${hasExperiences ? `
+    ${
+      hasExperiences
+        ? `
     <div>
       <div class="section-label">Expériences</div>
-      ${experiences.map(exp => {
-        const loc = [exp.company, exp.city].filter(Boolean).join(', ');
-        return `
+      ${experiences
+        .map((exp) => {
+          return `
       <div class="timeline-item">
-        <div class="timeline-date">${dateRange(exp.startDate, exp.endDate, exp.current)}</div>
+        <div class="timeline-date">${experienceDateRange(exp.startDate, exp.endDate, exp.current)}</div>
         <div class="timeline-title">${esc(exp.position)}</div>
-        ${loc ? `<div class="timeline-sub">${esc(loc)}</div>` : ''}
-        ${exp.description ? `<div class="timeline-desc">${descriptionToHtml(exp.description)}</div>` : ''}
-        ${[...(exp.technicalSkills || []), ...(exp.tools || [])].length > 0 ? `<div class="timeline-skills">${[...(exp.technicalSkills || []), ...(exp.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
-        ${exp.projectLink ? `<div class="timeline-link"><a href="${esc(exp.projectLink)}">Voir le projet</a></div>` : ''}
+        ${timelineOrgCityHtml(exp.company, exp.city)}
+        ${exp.description ? `<div class="timeline-desc">${descriptionToHtml(exp.description, exp.structuredDescription)}</div>` : ""}
+        ${[...(exp.technicalSkills || []), ...(exp.tools || [])].length > 0 ? `<div class="timeline-skills">${[...(exp.technicalSkills || []), ...(exp.tools || [])].map((s) => `<span>${esc(s)}</span>`).join("")}</div>` : ""}
+        ${exp.projectLink ? `<div class="timeline-link"><a href="${esc(exp.projectLink)}">Voir le projet</a></div>` : ""}
       </div>`;
-      }).join('')}
-    </div>` : ''}
+        })
+        .join("")}
+    </div>`
+        : ""
+    }
 
-    ${hasProjects ? `
+    ${
+      hasProjects
+        ? `
     <div>
       <div class="section-label">Projets</div>
-      ${projects.map(proj => `
+      ${projects
+        .map(
+          (proj) => `
       <div class="timeline-item">
         <div class="timeline-date">${dateRange(proj.startDate, proj.endDate)}</div>
         <div class="timeline-title">${esc(proj.name)}</div>
-        ${proj.description ? `<div class="timeline-desc">${descriptionToHtml(proj.description)}</div>` : ''}
-        ${[...(proj.technicalSkills || []), ...(proj.tools || [])].length > 0 ? `<div class="timeline-skills">${[...(proj.technicalSkills || []), ...(proj.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
-        ${proj.url ? `<div class="timeline-link"><a href="${esc(proj.url)}">${cleanUrl(proj.url)}</a></div>` : ''}
-      </div>`).join('')}
-    </div>` : ''}
+        ${proj.description ? `<div class="timeline-desc">${descriptionToHtml(proj.description, proj.structuredDescription)}</div>` : ""}
+        ${[...(proj.technicalSkills || []), ...(proj.tools || [])].length > 0 ? `<div class="timeline-skills">${[...(proj.technicalSkills || []), ...(proj.tools || [])].map((s) => `<span>${esc(s)}</span>`).join("")}</div>` : ""}
+        ${proj.url ? `<div class="timeline-link"><a href="${esc(proj.url)}">${cleanUrl(proj.url)}</a></div>` : ""}
+      </div>`,
+        )
+        .join("")}
+    </div>`
+        : ""
+    }
 
-    ${hasEducation ? `
+    ${
+      hasEducation
+        ? `
     <div>
       <div class="section-label">Formations</div>
-      ${education.map(edu => {
-        const loc = [edu.school, edu.city].filter(Boolean).join(', ');
-        return `
+      ${education
+        .map((edu) => {
+          return `
       <div class="timeline-item">
-        <div class="timeline-date">${dateRange(edu.startDate, edu.endDate)}</div>
+        <div class="timeline-date">${educationDateRange(edu.startDate, edu.endDate)}</div>
         <div class="timeline-title">${esc(edu.degree)}</div>
-        ${loc ? `<div class="timeline-sub">${esc(loc)}</div>` : ''}
-        ${edu.specialty ? `<div class="timeline-sub">${esc(edu.specialty)}</div>` : ''}
-        ${[...(edu.technicalSkills || []), ...(edu.tools || [])].length > 0 ? `<div class="timeline-skills">${[...(edu.technicalSkills || []), ...(edu.tools || [])].map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}
+        ${timelineOrgCityHtml(edu.school, edu.city)}
+        ${edu.specialty ? `<div class="timeline-sub">${esc(edu.specialty)}</div>` : ""}
+        ${[...(edu.technicalSkills || []), ...(edu.tools || [])].length > 0 ? `<div class="timeline-skills">${[...(edu.technicalSkills || []), ...(edu.tools || [])].map((s) => `<span>${esc(s)}</span>`).join("")}</div>` : ""}
       </div>`;
-      }).join('')}
-    </div>` : ''}
+        })
+        .join("")}
+    </div>`
+        : ""
+    }
 
   </div>
 
   <!-- Right column -->
   <div class="right">
     <div class="identity">
-      ${p.photo ? `<img class="identity__photo" src="${p.photo}" alt="Photo"/>` : ''}
+      ${p.photo ? `<img class="identity__photo" src="${p.photo}" alt="Photo"/>` : ""}
       <div class="identity__name">${esc(p.firstName)} ${esc(p.lastName)}</div>
-      ${p.title ? `<div class="identity__title">${esc(p.title)}</div>` : ''}
+      ${p.title ? `<div class="identity__title">${esc(p.title)}</div>` : ""}
     </div>
 
-    ${p.summary ? `
+    ${
+      p.summary
+        ? `
     <div class="r-section">
       <div class="r-section__label">Profil</div>
       <div class="profile-box">${esc(p.summary)}</div>
-    </div>` : ''}
+    </div>`
+        : ""
+    }
 
-    ${hasTech ? `
+    ${
+      hasTech
+        ? `
     <div class="r-section">
       <div class="r-section__label">Technologies</div>
       <div class="r-tech-grid">
-        ${[...technicalSkills, ...tools].map(s => `<span class="r-tech-tag">${esc(s)}</span>`).join('')}
+        ${[...technicalSkills, ...tools].map((s) => `<span class="r-tech-tag">${esc(s)}</span>`).join("")}
       </div>
-    </div>` : ''}
+    </div>`
+        : ""
+    }
 
-    ${contactItems.length > 0 ? `
+    ${
+      contactItems.length > 0
+        ? `
     <div class="r-section">
       <div class="r-section__label">Contact</div>
-      ${contactItems.join('')}
-    </div>` : ''}
+      ${contactItems.join("")}
+    </div>`
+        : ""
+    }
 
-    ${hasSoft ? `
+    ${
+      hasSoft
+        ? `
     <div class="r-section">
       <div class="r-section__label">Savoir-être</div>
       <div class="r-soft-grid">
-        ${softSkills.map((s, i) => `<span class="r-soft-tag">${esc(s)}</span>${i < softSkills.length - 1 ? '<span class="r-soft-sep">·</span>' : ''}`).join('')}
+        ${softSkills.map((s, i) => `<span class="r-soft-tag">${esc(s)}</span>${i < softSkills.length - 1 ? '<span class="r-soft-sep">·</span>' : ""}`).join("")}
       </div>
-    </div>` : ''}
+    </div>`
+        : ""
+    }
 
-    ${hasLanguages ? `
+    ${
+      hasLanguages
+        ? `
     <div class="r-section">
       <div class="r-section__label">Langues</div>
       <div class="r-langs">
-        ${languages.map(l => `<div class="r-lang"><span class="r-lang__name">${esc(l.language)}</span> : <span class="r-lang__lvl">${esc(l.level)}</span></div>`).join('')}
+        ${languages.map((l) => `<div class="r-lang"><span class="r-lang__name">${esc(l.language)}</span> : <span class="r-lang__lvl">${esc(l.level)}</span></div>`).join("")}
       </div>
-    </div>` : ''}
+    </div>`
+        : ""
+    }
 
-    ${hasCertifications ? `
+    ${
+      hasCertifications
+        ? `
     <div class="r-section">
       <div class="r-section__label">Certifications</div>
-      ${certifications.map(c => `
+      ${certifications
+        .map(
+          (c) => `
       <div class="r-cert">
         <span class="r-cert__name">${esc(c.name)}</span>
-        ${c.organization ? `<span class="r-cert__org"> — ${esc(c.organization)}</span>` : ''}
-        ${c.date ? `<span class="r-cert__org"> — ${formatDate(c.date)}</span>` : ''}
-      </div>`).join('')}
-    </div>` : ''}
+        ${c.organization ? `<span class="r-cert__org"> — ${esc(c.organization)}</span>` : ""}
+        ${c.date ? `<span class="r-cert__org"> — ${formatDate(c.date)}</span>` : ""}
+      </div>`,
+        )
+        .join("")}
+    </div>`
+        : ""
+    }
 
-    ${hasInterests ? `
+    ${
+      hasInterests
+        ? `
     <div class="r-section">
       <div class="r-section__label">Centres d'intérêt</div>
       <div class="interest-grid">
-        ${interests.map((interest, i) => `<span class="interest-card" style="background:${interestColors[i % interestColors.length]}">${esc(interest)}</span>`).join('')}
+        ${interests.map((interest, i) => `<span class="interest-card" style="background:${interestColors[i % interestColors.length]}">${esc(interest)}</span>`).join("")}
       </div>
-    </div>` : ''}
+    </div>`
+        : ""
+    }
   </div>
 </div>
 
-${data.atsKeywords ? `<div class="ats-hidden">${esc(data.atsKeywords)}</div>` : ''}
+${data.atsKeywords ? `<div class="ats-hidden">${esc(data.atsKeywords)}</div>` : ""}
 
 <div class="c-density-debug" title="Densité appliquée selon le contenu">${density} (${score})</div>
 

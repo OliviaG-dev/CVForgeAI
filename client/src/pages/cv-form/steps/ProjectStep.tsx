@@ -18,6 +18,7 @@ const emptyProject: () => Project = () => ({
   id: generateId(),
   name: '',
   description: '',
+  structuredDescription: false,
   url: '',
   startDate: '',
   endDate: '',
@@ -145,7 +146,10 @@ export default function ProjectStep({ data, onChange }: Props) {
       const res = await fetch(`${API_URL}/api/cv/improve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: text }),
+        body: JSON.stringify({
+          description: text,
+          senior: proj?.structuredDescription === true,
+        }),
       });
       if (!res.ok) throw new Error('Erreur serveur');
       const { improved } = await res.json();
@@ -159,14 +163,14 @@ export default function ProjectStep({ data, onChange }: Props) {
     }
   };
 
-  const update = (id: string, field: keyof Project, value: string) => {
+  const update = (id: string, field: keyof Project, value: string | boolean) => {
     onChange(data.map((p) => {
       if (p.id !== id) return p;
       const next = { ...p, [field]: value };
-      if (field === 'startDate' && value && p.endDate && p.endDate < value) {
+      if (field === 'startDate' && typeof value === 'string' && value && p.endDate && p.endDate < value) {
         next.endDate = value;
       }
-      if (field === 'endDate' && value && p.startDate && value < p.startDate) {
+      if (field === 'endDate' && typeof value === 'string' && value && p.startDate && value < p.startDate) {
         return p;
       }
       return next;
@@ -246,6 +250,15 @@ export default function ProjectStep({ data, onChange }: Props) {
             />
           </label>
 
+          <label className="step__checkbox step__checkbox--inline">
+            <input
+              type="checkbox"
+              checked={proj.structuredDescription === true}
+              onChange={(e) => update(proj.id, 'structuredDescription', e.target.checked)}
+            />
+            <span>Format profil senior (puces ●, titre en gras avant « : » dans le CV)</span>
+          </label>
+
           <label className="step__field">
             <div className="step__field-header">
               <span className="step__label">Description</span>
@@ -257,7 +270,11 @@ export default function ProjectStep({ data, onChange }: Props) {
                 className={`step__improve-btn${improvingId === proj.id ? ' step__improve-btn--loading' : ''}`}
                 onClick={() => handleImproveDescription(proj.id)}
                 disabled={improvingId !== null || !proj.description?.trim()}
-                title="Améliorer le texte avec l'IA"
+                title={
+                  proj.structuredDescription
+                    ? "Structurer en puces senior avec l'IA"
+                    : "Améliorer le texte avec l'IA"
+                }
               >
                 {improvingId === proj.id ? (
                   <span className="step__improve-btn-loading" aria-label="Chargement en cours">
@@ -266,7 +283,7 @@ export default function ProjectStep({ data, onChange }: Props) {
                     <span className="step__improve-btn-dot" />
                   </span>
                 ) : (
-                  "Améliorer avec l'IA"
+                  proj.structuredDescription ? "Structurer (IA senior)" : "Améliorer avec l'IA"
                 )}
               </button>
             </div>
@@ -274,9 +291,18 @@ export default function ProjectStep({ data, onChange }: Props) {
               className="step__textarea"
               value={proj.description}
               onChange={(e) => update(proj.id, 'description', e.target.value)}
-              placeholder="Décrivez le projet, son objectif et vos contributions..."
-              rows={3}
+              placeholder={
+                proj.structuredDescription
+                  ? "● Contexte & objectif : description...\n● Stack & architecture : ..."
+                  : "Décrivez le projet, son objectif et vos contributions..."
+              }
+              rows={proj.structuredDescription || (proj.description?.length ?? 0) > 400 ? 8 : 3}
             />
+            {proj.structuredDescription && (
+              <p className="step__hint">
+                Une ligne par puce, avec « Titre : détail ». Les titres avant « : » apparaissent en gras dans le PDF.
+              </p>
+            )}
           </label>
 
           <div className="step__row">

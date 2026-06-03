@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { ChevronDownIcon, TrashIcon } from '../../../components/icons';
 import DeleteConfirmModal from '../../../components/DeleteConfirmModal';
 import type { Education } from '../../../types/cv';
+import { computeDurationLabel } from '../../../utils/dateDuration';
 
 interface Props {
   data: Education[];
@@ -79,8 +80,14 @@ function formatMonth(ym: string): string {
 
 function formatDateRange(start?: string, end?: string): string {
   if (!start) return '';
-  if (end) return `${formatMonth(start)} - ${formatMonth(end)}`;
-  return formatMonth(start);
+  const ongoing = !end;
+  let label: string;
+  if (end) label = `${formatMonth(start)} - ${formatMonth(end)}`;
+  else label = `${formatMonth(start)} - En cours`;
+
+  const duration = computeDurationLabel(start, end ?? '', { ongoingIfNoEnd: ongoing });
+  if (!duration) return label;
+  return `${label} (${duration})`;
 }
 
 function sortByDateDesc(items: Education[]): Education[] {

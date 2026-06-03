@@ -18,8 +18,10 @@ cvRouter.post('/generate', async (req: Request, res: Response) => {
 
 cvRouter.post('/improve', async (req: Request, res: Response) => {
   try {
-    const { description } = req.body;
-    const improved = await improveDescription(description);
+    const { description, senior } = req.body;
+    const improved = await improveDescription(description, {
+      senior: senior === true,
+    });
     res.json({ improved });
   } catch (error) {
     console.error('Error improving description:', error);
