@@ -1,4 +1,6 @@
 import type { AccentColor, CVData, CVTemplate, Language, PersonalInfo } from '../types/cv';
+import type { EnglishUsageContext } from '../types/language.types';
+import { ENGLISH_USAGE_OPTIONS } from '../types/language.types';
 import { emptyCVData } from '../types/cv';
 
 const PERSONAL_KEYS: (keyof PersonalInfo)[] = [
@@ -35,6 +37,9 @@ const ACCENT_COLORS: AccentColor[] = [
 const CV_TEMPLATES: CVTemplate[] = ['classic', 'classic_dev', 'creative'];
 
 const LANGUAGE_LEVELS = ['Natif', 'Courant', 'Intermédiaire', 'Débutant'] as const;
+const ENGLISH_CONTEXT_IDS = new Set(
+  ENGLISH_USAGE_OPTIONS.map((o) => o.id),
+);
 
 function parseAccentColor(v: unknown): AccentColor {
   return typeof v === 'string' && ACCENT_COLORS.includes(v as AccentColor)
@@ -58,10 +63,19 @@ function parseLanguages(v: unknown): Language[] {
         typeof level === 'string' && LANGUAGE_LEVELS.includes(level as (typeof LANGUAGE_LEVELS)[number])
           ? (level as Language['level'])
           : 'Courant';
+      const rawContexts = item.englishContexts;
+      const englishContexts = Array.isArray(rawContexts)
+        ? rawContexts.filter(
+            (c): c is EnglishUsageContext =>
+              typeof c === 'string' && ENGLISH_CONTEXT_IDS.has(c as EnglishUsageContext),
+          )
+        : undefined;
+
       return {
         id: typeof item.id === 'string' ? item.id : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         language: typeof item.language === 'string' ? item.language : '',
         level: safeLevel,
+        englishContexts: englishContexts?.length ? englishContexts : undefined,
       };
     });
 }

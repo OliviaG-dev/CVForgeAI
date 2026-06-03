@@ -1,5 +1,11 @@
 import { useState } from 'react';
 import type { Language, Certification, AccentColor, CVTemplate } from '../../../types/cv';
+import { ENGLISH_USAGE_OPTIONS } from '../../../types/language.types';
+import type { EnglishUsageContext } from '../../../types/language.types';
+import {
+  canShowEnglishContexts,
+  toggleEnglishContext,
+} from '../../../utils/language';
 
 const ACCENT_COLORS: { value: AccentColor; label: string; hex: string }[] = [
   { value: 'blue',   label: 'Bleu',   hex: '#2563eb' },
@@ -58,7 +64,39 @@ export default function ExtrasStep({
     onChangeLanguages(languages.filter((l) => l.id !== id));
 
   const updateLanguage = (id: string, field: keyof Language, value: string) =>
-    onChangeLanguages(languages.map((l) => (l.id === id ? { ...l, [field]: value } : l)));
+    onChangeLanguages(
+      languages.map((l) => {
+        if (l.id !== id) return l;
+        const next = { ...l, [field]: value };
+        if (field === 'language' || field === 'level') {
+          if (!canShowEnglishContexts(next)) {
+            next.englishContexts = undefined;
+          }
+        }
+        return next;
+      }),
+    );
+
+  const toggleLanguageContext = (
+    id: string,
+    contextId: EnglishUsageContext,
+    checked: boolean,
+  ) => {
+    onChangeLanguages(
+      languages.map((l) =>
+        l.id === id
+          ? {
+              ...l,
+              englishContexts: toggleEnglishContext(
+                l.englishContexts,
+                contextId,
+                checked,
+              ),
+            }
+          : l,
+      ),
+    );
+  };
 
   const addCertification = () =>
     onChangeCertifications([...certifications, { id: generateId(), name: '', organization: '', date: '' }]);
@@ -98,29 +136,53 @@ export default function ExtrasStep({
         <p className="step__empty">Aucune langue ajoutée.</p>
       )}
 
-      {languages.map((lang) => (
-        <div key={lang.id} className="step__inline-card">
-          <input
-            type="text"
-            className="step__input"
-            value={lang.language}
-            onChange={(e) => updateLanguage(lang.id, 'language', e.target.value)}
-            placeholder="Français"
-          />
-          <select
-            className="step__select"
-            value={lang.level}
-            onChange={(e) => updateLanguage(lang.id, 'level', e.target.value)}
-          >
-            {LEVELS.map((lvl) => (
-              <option key={lvl} value={lvl}>{lvl}</option>
-            ))}
-          </select>
-          <button type="button" className="step__remove-btn" onClick={() => removeLanguage(lang.id)}>
-            ×
-          </button>
-        </div>
-      ))}
+      {languages.map((lang) => {
+        const showEnglishContexts = canShowEnglishContexts(lang);
+        return (
+          <div key={lang.id} className="step__lang-block">
+            <div className="step__inline-card">
+              <input
+                type="text"
+                className="step__input"
+                value={lang.language}
+                onChange={(e) => updateLanguage(lang.id, 'language', e.target.value)}
+                placeholder="Français, Anglais..."
+              />
+              <select
+                className="step__select"
+                value={lang.level}
+                onChange={(e) => updateLanguage(lang.id, 'level', e.target.value)}
+              >
+                {LEVELS.map((lvl) => (
+                  <option key={lvl} value={lvl}>{lvl}</option>
+                ))}
+              </select>
+              <button type="button" className="step__remove-btn" onClick={() => removeLanguage(lang.id)}>
+                ×
+              </button>
+            </div>
+            {showEnglishContexts && (
+              <div className="step__lang-contexts">
+                <span className="step__hint step__lang-contexts-label">Usage en anglais</span>
+                <div className="step__lang-contexts-grid">
+                  {ENGLISH_USAGE_OPTIONS.map((opt) => (
+                    <label key={opt.id} className="step__checkbox step__checkbox--inline">
+                      <input
+                        type="checkbox"
+                        checked={lang.englishContexts?.includes(opt.id) === true}
+                        onChange={(e) =>
+                          toggleLanguageContext(lang.id, opt.id, e.target.checked)
+                        }
+                      />
+                      <span>{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
 
       {/* Certifications */}
       <div className="step__header-row step__section-gap">

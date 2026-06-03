@@ -1052,6 +1052,30 @@
   border-color: rgba(255, 255, 255, 0.06);
 }
 
+.step__lang-block {
+  margin-bottom: 0.85rem;
+}
+
+.step__lang-contexts {
+  margin-top: 0.5rem;
+  margin-left: 0.25rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(100, 108, 255, 0.06);
+  border: 1px solid rgba(100, 108, 255, 0.12);
+  border-radius: 10px;
+}
+
+.step__lang-contexts-label {
+  display: block;
+  margin-bottom: 0.45rem;
+}
+
+.step__lang-contexts-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
 /* ─── Buttons ─── */
 
 .step__add-btn {

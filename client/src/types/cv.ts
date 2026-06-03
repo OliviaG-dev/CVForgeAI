@@ -56,10 +56,14 @@ export interface Project {
   softSkills: string[];
 }
 
+import type { EnglishUsageContext } from './language.types';
+
 export interface Language {
   id: string;
   language: string;
   level: 'Natif' | 'Courant' | 'Intermédiaire' | 'Débutant';
+  /** Contexte pro en anglais (Natif / Courant / Intermédiaire) */
+  englishContexts?: EnglishUsageContext[];
 }
 
 export interface Certification {
