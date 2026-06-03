@@ -5,8 +5,11 @@
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-3-6E9F18?logo=vitest&logoColor=white)
 ![Google Gemini](https://img.shields.io/badge/Google-Gemini%202.5%20Flash-4285F4?logo=google&logoColor=white)
 ![Puppeteer](https://img.shields.io/badge/Puppeteer-24-00D9FF?logo=puppeteer&logoColor=white)
+![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
+![CD](https://img.shields.io/badge/CD-Render%20%2B%20Vercel-46E3B7?logo=render&logoColor=white)
 
 CVForge AI est une application web moderne qui permet de **générer automatiquement un CV professionnel** grâce à l'intelligence artificielle.
 
@@ -20,13 +23,14 @@ L'objectif est de simplifier la création de CV en transformant quelques informa
 - **Templates** : Classique, **Classique dev** (compétences par thème), Créatif (2 colonnes + photo).
 - **Export PDF** : téléchargez votre CV dans un format propre et professionnel (Puppeteer).
 - **Accordéons** : expériences, projets et formations avec dates et **durée automatique** (ex. `2 ans et 3 mois`).
-- **Format profil senior** : puces `●`, titres en gras gris avant `:` pour les descriptions d'expériences et de projets.
+- **Format profil senior** : puces `●`, titres en gras gris avant `:` pour les descriptions d'expériences et de projets (case à cocher explicite).
 - **Compétences clés (dev)** : regroupement automatique (Front-end, Mobile, Back-end & API, Tests, DevOps, IA, Méthodologies…).
 - **Langues** : pour l'anglais (Natif / Courant / Intermédiaire), cases d'usage pro (Professionnel, Équipe internationale, Daily & Syncs techniques).
 - **Mise en page dev** : espacement harmonieux de l'en-tête, **expériences à partir de la page 2** sur le template classique dev.
 - **Ville discrète** : entreprise / école en gris moyen, ville en petit gris clair.
 - **Déduplication des compétences** : fusion automatique des doublons (React/react, Node.js/nodejs, etc.).
 - **Optimisation ATS** : mots-clés cachés injectés dans le PDF.
+- **Brouillon local** : sauvegarde automatique du formulaire dans `localStorage`.
 - **Interface responsive** : boutons en icônes sur mobile/tablette.
 
 ## Technologies
@@ -34,35 +38,40 @@ L'objectif est de simplifier la création de CV en transformant quelques informa
 | Catégorie | Technologies |
 |-----------|-------------|
 | Frontend | React, TypeScript, Vite, Vitest |
-| Backend | Node.js, Express, TypeScript, Vitest |
+| Backend | Node.js, Express, TypeScript, Vitest, Supertest |
 | IA | Google Gemini 2.5 Flash (gratuit) |
 | PDF | Puppeteer (Chrome headless) |
-| CI | GitHub Actions |
+| CI/CD | GitHub Actions (CI) + Render / Vercel auto-deploy (CD) |
 
 ## Structure du projet
 
 ```
 cvforge-ai/
-├── .github/workflows/      # CI (lint, typecheck, tests, build)
-├── client/                 # Frontend React
+├── .github/workflows/          # CI (lint, typecheck, tests, build)
+├── client/                     # Frontend React
 │   ├── src/
 │   │   ├── components/
-│   │   ├── pages/cv-form/  # Formulaire multi-étapes + aperçu PDF
-│   │   ├── types/          # Types CV + langues (englishContexts)
-│   │   └── utils/          # skills, language, dateDuration, cvDraftStorage
+│   │   ├── pages/cv-form/      # Formulaire multi-étapes + aperçu PDF
+│   │   ├── types/              # Types CV + langues (englishContexts)
+│   │   └── utils/              # skills, language, dateDuration, cvDraftStorage
+│   │       └── *.test.ts       # Tests Vitest client
 │   └── package.json
 │
-├── server/                 # Backend Express
+├── server/                     # Backend Express
 │   ├── src/
-│   │   ├── data/           # devSkillCategories.json
-│   │   ├── routes/cv.ts
-│   │   ├── services/       # ai.ts, pdf.ts
-│   │   ├── templates/cv.ts # HTML PDF (classic, classic_dev, creative)
-│   │   └── utils/          # classifyDevSkills, descriptionHtml, dateDuration…
+│   │   ├── app.ts              # Factory Express (tests + index)
+│   │   ├── data/               # devSkillCategories.json
+│   │   ├── routes/cv.ts        # + cv.test.ts (API)
+│   │   ├── services/           # ai.ts, pdf.ts (mockés en tests)
+│   │   ├── templates/
+│   │   │   ├── cv.ts           # HTML PDF (classic, classic_dev, creative)
+│   │   │   └── cv.html.test.ts
+│   │   ├── test/fixtures/      # cvData.ts (données CV pour tests)
+│   │   └── utils/              # + *.test.ts
 │   ├── puppeteer.config.cjs
 │   └── package.json
 │
-├── package.json            # Scripts racine (dev, ci, test)
+├── package.json                # Scripts racine (dev, ci, test)
 └── README.md
 ```
 
@@ -93,9 +102,9 @@ npm run dev
 | Méthode | Route | Description |
 |---------|-------|-------------|
 | `GET` | `/api/health` | Santé du serveur |
-| `POST` | `/api/cv/generate` | Générer un CV (JSON) |
+| `POST` | `/api/cv/generate` | Générer un CV (JSON) via Gemini |
 | `POST` | `/api/cv/improve` | Améliorer une description (`senior: true` pour puces profil senior) |
-| `POST` | `/api/cv/pdf` | Générer le PDF |
+| `POST` | `/api/cv/pdf` | Générer le PDF (body = données CV complètes) |
 
 ## Scripts disponibles
 
@@ -105,22 +114,48 @@ npm run dev
 | `npm run build` | Build production du client |
 | `npm run lint` | ESLint (client) |
 | `npm run typecheck` | TypeScript serveur (`tsc --noEmit`) |
-| `npm run test` | Tests Vitest (client + server) |
+| `npm run test` | Tests Vitest (server puis client) |
 | `npm run ci` | Lint + typecheck + tests + build client |
 | `npm run install:all` | Installe client + server |
 
-Serveur : `npm run build --prefix server` (Chrome + `tsc` pour prod).
+Ciblés par package :
 
-Tests unitaires ciblés :
+```bash
+npm run test --prefix server    # 45 tests
+npm run test --prefix client    # 29 tests
+npm run build --prefix server   # Chrome + tsc (prod Render)
+```
 
-- **Durées** : `dateDuration` (mois inclusifs, poste actuel, formation en cours)
-- **Puces / descriptions** : `descriptionHtml` (format senior, échappement HTML)
-- **Langues** : `formatLanguage` (PDF), `language` (formulaire anglais)
-- **Compétences dev** : `classifyDevSkills` + `devSkillCategories.json`
+## Tests
+
+**74 tests Vitest** (45 server + 29 client), exécutés en CI sans Gemini ni Chrome réel (mocks IA/PDF sur les routes).
+
+```bash
+npm run test          # les deux packages
+npm run ci            # inclut les tests
+```
+
+| Couche | Fichiers | Ce qui est vérifié |
+|--------|----------|-------------------|
+| Utils server | `dateDuration`, `descriptionHtml`, `formatLanguage`, `classifyDevSkills` | Durées inclusives, puces senior, libellés anglais, catégories dev |
+| Templates HTML | `templates/cv.html.test.ts` | `classic` / `classic_dev` / `creative`, saut page expériences, durées auto, ville, projets, ATS, échappement HTML |
+| API | `routes/cv.test.ts` | Supertest : `/health`, `/generate`, `/improve`, `/pdf`, erreurs 500, `noMargins` créatif |
+| Utils client | `language`, `skills`, `dateDuration`, `cvDraftStorage` | Contextes anglais, dédup skills, durées, merge + brouillon `localStorage` |
+
+Fixtures partagées : `server/src/test/fixtures/cvData.ts`.
+
+**Hors scope actuel** (volontaire) : tests composants React, E2E navigateur, appels Gemini/Puppeteer réels en CI.
 
 ## CI/CD
 
-Workflow `.github/workflows/ci.yml` sur `push` / `pull_request` vers `master` / `main` :
+Pas de workflow `cd.yml` séparé : la **CD de base** repose sur l’**auto-deploy** Render + Vercel à chaque push sur `master`, après merge d’une PR dont la CI est verte (ruleset recommandé).
+
+| Étape | Outil | Rôle |
+|-------|--------|------|
+| **CI** | GitHub Actions (`.github/workflows/ci.yml`) | Lint, typecheck, tests, build client sur `push` / `pull_request` |
+| **CD** | Render (API) + Vercel (client) | Déploiement automatique sur `master` |
+
+### CI (GitHub Actions)
 
 1. `npm ci` (client + server)
 2. Lint client
@@ -130,23 +165,33 @@ Workflow `.github/workflows/ci.yml` sur `push` / `pull_request` vers `master` / 
 
 En local : `npm run ci`
 
-Recommandé sur GitHub : **ruleset** sur `master` (PR obligatoire + statut CI vert).
+Recommandé : **ruleset** sur `master` (PR obligatoire + statut CI vert avant merge).
 
-## Déploiement (Render)
+### CD (Render + Vercel)
 
-- **Root Directory** : `server` (backend)
+**Render** — backend (`server/`) :
+
+- **Root Directory** : `server`
 - **Build** : `npm install && npm run build`
 - **Start** : `npm run start`
+- **Auto-Deploy** : branche `master`
+- Variables : `GEMINI_API_KEY`, etc.
+- `puppeteer.config.cjs` : cache Chrome pour le PDF
 
-`puppeteer.config.cjs` : cache Chrome pour le PDF en production.
+**Vercel** — frontend (`client/`) :
+
+- **Root Directory** : `client`
+- **Build** : `npm run build`
+- **Auto-Deploy** : branche `master`
+- Variable : `VITE_API_URL` → URL Render (ex. `https://cvforgeai.onrender.com`)
 
 ## Objectif du projet
 
-- Intégration IA (Gemini)
+- Intégration IA (Gemini) pour génération et reformulation
 - App React + API Express en monorepo
-- PDF serveur (Puppeteer)
-- Formulaires complexes (accordéons, modales, brouillon localStorage)
-- Logique métier testée (utils + CI)
+- PDF serveur (Puppeteer) avec templates HTML maintenables
+- Formulaires complexes (accordéons, modales, brouillon `localStorage`)
+- **Logique métier couverte par tests** (utils, rendu HTML, routes API) et pipeline **CI/CD**
 
 ## Licence
 
