@@ -1,0 +1,81 @@
+/** Données CV minimales pour les tests templates / routes. */
+export const minimalClassicDevCv = {
+  personalInfo: {
+    firstName: "Jean",
+    lastName: "Dupont",
+    title: "Développeur Full Stack",
+    summary: "Développeur avec 5 ans d'expérience.",
+    email: "jean@example.com",
+    phone: "",
+    city: "Lyon",
+    linkedin: "",
+    portfolio: "",
+    github: "",
+  },
+  experiences: [
+    {
+      id: "exp1",
+      position: "Lead Developer",
+      company: "TechCorp",
+      city: "Lyon",
+      startDate: "2022-01",
+      endDate: "",
+      current: true,
+      description: "● Ownership : Conception produit.",
+      structuredDescription: true,
+      projectLink: "",
+      technicalSkills: ["React"],
+      tools: [],
+      softSkills: [],
+    },
+  ],
+  projects: [
+    {
+      id: "proj1",
+      name: "Portfolio CV",
+      description: "Générateur de CV.",
+      structuredDescription: false,
+      url: "https://example.com/portfolio",
+      startDate: "2023-06",
+      endDate: "2024-01",
+      technicalSkills: ["React"],
+      tools: [],
+      softSkills: [],
+    },
+  ],
+  education: [
+    {
+      id: "edu1",
+      degree: "Master Informatique",
+      school: "Université Lyon",
+      city: "Lyon",
+      startDate: "2018-09",
+      endDate: "2020-06",
+      specialty: "Développement web",
+      technicalSkills: [],
+      tools: [],
+      softSkills: [],
+    },
+  ],
+  technicalSkills: ["React", "TypeScript", "Node.js"],
+  tools: ["Docker", "Git"],
+  softSkills: ["SCRUM"],
+  languages: [
+    {
+      id: "lang1",
+      language: "Anglais",
+      level: "Courant",
+      englishContexts: ["professional"],
+    },
+  ],
+  certifications: [],
+  interests: [],
+  accentColor: "blue" as const,
+  template: "classic_dev" as const,
+  atsKeywords: "kubernetes hidden",
+};
+
+export const minimalClassicCv = {
+  ...minimalClassicDevCv,
+  template: "classic" as const,
+};
