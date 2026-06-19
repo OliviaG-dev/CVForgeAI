@@ -65,4 +65,20 @@ describe("classifySkillsForClassicDev", () => {
   it("returns empty array when no skills provided", () => {
     expect(classifySkillsForClassicDev([], [], [])).toEqual([]);
   });
+
+  it("classifies ESLint, GitHub, PHP, Render and Zustand into dev categories", () => {
+    const rows = classifySkillsForClassicDev(
+      ["ESLint", "Github", "PHP", "Render", "Zustand"],
+      [],
+      [],
+    );
+
+    expect(itemsIn(rows, "Front-end")).toContain("Zustand");
+    expect(itemsIn(rows, "Back-end & API")).toContain("PHP");
+    expect(itemsIn(rows, "Tests & Qualité")).toContain("ESLint");
+    expect(itemsIn(rows, "Cloud, DevOps & Infrastructure")).toEqual(
+      expect.arrayContaining(["Github", "Render"]),
+    );
+    expect(rowLabels(rows)).not.toContain("Autres");
+  });
 });

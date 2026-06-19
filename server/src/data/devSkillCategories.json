@@ -24,7 +24,8 @@
       "HTML",
       "CSS",
       "Tailwind CSS",
-      "SASS"
+      "SASS",
+      "Zustand"
     ],
     "mobile": ["React Native", "Expo", "Ionic"],
     "backend": [
@@ -50,10 +51,12 @@
       "Docker",
       "CI/CD",
       "Git",
+      "GitHub",
       "GitHub Actions",
       "Linux",
       "Kubernetes",
       "Terraform",
+      "Render",
       "Vercel",
       "Netlify"
     ],
@@ -193,7 +196,8 @@
       "rtl",
       "mocha",
       "chai",
-      "pytest"
+      "pytest",
+      "eslint"
     ],
     "devops": [
       "github actions",
@@ -213,11 +217,13 @@
       "vercel",
       "netlify",
       "heroku",
+      "render",
       "linux",
       "nginx",
       "apache",
       "gitlab",
       "bitbucket",
+      "github",
       "github actions"
     ],
     "backend": [
@@ -241,6 +247,7 @@
       "symphony",
       "django",
       "fastapi",
+      "php",
       "microservice",
       "open data",
       "rest api",
@@ -306,7 +313,8 @@
       "\\bnest(?:js)?\\b",
       "\\bgraphql\\b",
       "\\bpostgres(?:ql)?\\b",
-      "\\bprisma\\b"
+      "\\bprisma\\b",
+      "\\bphp\\b"
     ],
     "frontend": [
       "\\btypescript\\b",
@@ -315,14 +323,22 @@
       "\\breact\\b(?!\\s*native)",
       "\\bnext\\.?js?\\b"
     ],
-    "testing": ["\\bjest\\b", "\\bvitest\\b", "\\bcypress\\b", "\\bplaywright\\b"],
+    "testing": [
+      "\\bjest\\b",
+      "\\bvitest\\b",
+      "\\bcypress\\b",
+      "\\bplaywright\\b",
+      "\\beslint\\b"
+    ],
     "devops": [
       "\\bdocker\\b",
       "\\baws\\b",
       "\\blinux\\b",
       "\\bgit\\b",
       "\\bci/?cd\\b",
-      "\\bgithub\\s*actions\\b"
+      "\\bgithub\\s*actions\\b",
+      "\\bgithub\\b",
+      "\\brender\\b"
     ],
     "methodology": ["\\bscrum\\b", "\\bagile\\b"]
   },
