@@ -53,6 +53,8 @@
       "Git",
       "GitHub",
       "GitHub Actions",
+      "Nx",
+      "Nx monorepo",
       "Linux",
       "Kubernetes",
       "Terraform",
@@ -224,7 +226,12 @@
       "gitlab",
       "bitbucket",
       "github",
-      "github actions"
+      "github actions",
+      "nx monorepo",
+      "nx",
+      "monorepo",
+      "turborepo",
+      "lerna"
     ],
     "backend": [
       "node.js",
@@ -338,7 +345,10 @@
       "\\bci/?cd\\b",
       "\\bgithub\\s*actions\\b",
       "\\bgithub\\b",
-      "\\brender\\b"
+      "\\brender\\b",
+      "\\bnx\\b",
+      "\\bmonorepo\\b",
+      "\\bturborepo\\b"
     ],
     "methodology": ["\\bscrum\\b", "\\bagile\\b"]
   },

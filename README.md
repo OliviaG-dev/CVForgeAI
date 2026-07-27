@@ -26,7 +26,7 @@ L'objectif est de simplifier la création de CV en transformant quelques informa
 - **Format profil senior** : puces `●`, titres en gras gris avant `:` pour les descriptions d'expériences et de projets (case à cocher explicite).
 - **Compétences clés (dev)** : regroupement automatique (Front-end, Mobile, Back-end & API, Tests, DevOps, IA, Méthodologies…).
 - **Langues** : pour l'anglais (Natif / Courant / Intermédiaire), cases d'usage pro (Professionnel, Équipe internationale, Daily & Syncs techniques).
-- **Mise en page dev** : espacement harmonieux de l'en-tête, **expériences à partir de la page 2** sur le template classique dev.
+- **Mise en page dev** : en-tête compact (nom/prénom plus petits), expériences juste sous les compétences clés, cible 2 pages.
 - **Ville discrète** : entreprise / école en gris moyen, ville en petit gris clair.
 - **Déduplication des compétences** : fusion automatique des doublons (React/react, Node.js/nodejs, etc.).
 - **Optimisation ATS** : mots-clés cachés injectés dans le PDF.

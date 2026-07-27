@@ -14,15 +14,21 @@ describe("generateCVHTMLForTemplate", () => {
   afterEach(() => {
     vi.useRealTimers();
   });
-  it("renders classic_dev with key skills and experiences page break", () => {
+  it("renders classic_dev with key skills then experiences below", () => {
     const html = generateCVHTMLForTemplate(minimalClassicDevCv);
 
     expect(html).toContain("COMPÉTENCES CLÉS");
     expect(html).toContain("Front-end");
     expect(html).toContain("has-dev-skills");
     expect(html).toContain("section--experiences");
-    expect(html).toMatch(/page-break-before:\s*always/);
+    expect(html).toContain("font-size: 14pt");
+    expect(html).not.toMatch(
+      /\.section--experiences\s*\{[^}]*page-break-before:\s*always/,
+    );
     expect(html).toContain("Expériences");
+    expect(html.indexOf("<!-- Compétences clés")).toBeLessThan(
+      html.indexOf("<!-- Expériences -->"),
+    );
   });
 
   it("renders structured senior bullets in experience description", () => {

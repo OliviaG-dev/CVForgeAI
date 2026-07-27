@@ -295,7 +295,8 @@ function computeClassicLayoutSpacing(
   const hasDevSkillsBlock = useDevSkills && devSkillRowCount > 0;
 
   if (hasDevSkillsBlock) {
-    if (bodyScore >= 55) return { mode: "balanced", fillPage: false };
+    if (bodyScore >= 70) return { mode: "compact", fillPage: false };
+    if (bodyScore >= 45) return { mode: "balanced", fillPage: false };
     return { mode: "airy", fillPage: bodyScore < 38 };
   }
 
@@ -385,7 +386,6 @@ function generateClassicCVHTML(data: CVData): string {
   const useLayoutSpacing = layout.mode !== "compact";
   const showGapAfterHeader =
     useLayoutSpacing && hasDevSkillsBlock && (p.summary || true);
-  const showGapBeforeExperiences = hasDevSkillsBlock && hasExperiences;
   const hasProjects = (projects || []).length > 0;
   const hasEducation = education.length > 0;
   const hasLanguages = languages.length > 0;
@@ -436,23 +436,11 @@ function generateClassicCVHTML(data: CVData): string {
     height: 0;
   }
 
-  /* Remplit le bas de la page 1 avant le saut de page Expériences */
-  .cv-body.has-dev-skills .cv-gap--before-experiences {
-    flex: 1 1 auto;
-    min-height: 48pt;
-    height: auto;
-    max-height: none;
-  }
-
   .cv-flow--fill .cv-gap--after-header {
     height: 0;
     flex: 0 0 auto;
     min-height: 0;
     max-height: 0;
-  }
-
-  .cv-flow--fill.has-dev-skills-page1 {
-    min-height: 100vh;
   }
 
   .cv-body--balanced {
@@ -479,24 +467,50 @@ function generateClassicCVHTML(data: CVData): string {
     --space-after-skills: 24pt;
   }
 
+  /* Classique dev : densifier l'en-tête pour tenir en 2 pages */
+  .cv-body--balanced.has-dev-skills {
+    --space-header-bottom: 10pt;
+    --space-after-profession: 4pt;
+    --space-after-name: 12pt;
+    --space-after-bar: 14pt;
+    --space-after-contact: 8pt;
+    --space-before-summary: 6pt;
+    --space-after-summary: 2pt;
+    --space-before-skills: 2pt;
+    --space-after-skills: 18pt;
+  }
+
+  .cv-body--airy.has-dev-skills {
+    --space-header-bottom: 12pt;
+    --space-after-profession: 5pt;
+    --space-after-name: 14pt;
+    --space-after-bar: 16pt;
+    --space-after-contact: 10pt;
+    --space-before-summary: 8pt;
+    --space-after-summary: 3pt;
+    --space-before-skills: 3pt;
+    --space-after-skills: 22pt;
+  }
+
   .cv-body--balanced.has-dev-skills .header {
-    padding-top: 14pt;
+    padding-top: 2pt;
   }
 
   .cv-body--airy.has-dev-skills .header {
-    padding-top: 24pt;
+    padding-top: 4pt;
   }
 
-  /* Expériences toujours à partir de la page 2 (template dev + compétences clés) */
-  .cv-body.has-dev-skills .section--skills {
-    page-break-after: avoid;
-    break-after: avoid-page;
+  .cv-body.has-dev-skills .header__name {
+    font-size: 14pt;
+    margin-bottom: 12pt;
+  }
+
+  .cv-body.has-dev-skills .header__bar {
+    margin-bottom: 14pt;
   }
 
   .cv-body.has-dev-skills .section--experiences {
-    page-break-before: always;
-    break-before: page;
-    margin-top: 0;
+    margin-top: 14pt;
     padding-top: 0;
   }
 
@@ -823,7 +837,7 @@ function generateClassicCVHTML(data: CVData): string {
 </head>
 <body class="cv-body cv-body--${layout.mode}${layout.fillPage ? " cv-body--fill" : ""}${hasDevSkillsBlock ? " has-dev-skills" : ""}">
 
-  <div class="cv-flow${layout.fillPage || (hasDevSkillsBlock && hasExperiences) ? " cv-flow--fill" : ""}${hasDevSkillsBlock && hasExperiences ? " has-dev-skills-page1" : ""}">
+  <div class="cv-flow${layout.fillPage ? " cv-flow--fill" : ""}">
 
   <!-- Header -->
   <div class="header">
@@ -867,8 +881,6 @@ function generateClassicCVHTML(data: CVData): string {
   </div>`
       : ""
   }
-
-  ${showGapBeforeExperiences ? '<div class="cv-gap cv-gap--before-experiences"></div>' : ""}
 
   ${
     hasExperiences

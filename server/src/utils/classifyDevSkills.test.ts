@@ -81,4 +81,17 @@ describe("classifySkillsForClassicDev", () => {
     );
     expect(rowLabels(rows)).not.toContain("Autres");
   });
+
+  it("classifies Nx monorepo under Cloud, DevOps & Infrastructure", () => {
+    const rows = classifySkillsForClassicDev(
+      ["Nx monorepo", "Nx", "Turborepo"],
+      [],
+      [],
+    );
+
+    expect(itemsIn(rows, "Cloud, DevOps & Infrastructure")).toEqual(
+      expect.arrayContaining(["Nx monorepo", "Nx", "Turborepo"]),
+    );
+    expect(rowLabels(rows)).not.toContain("Autres");
+  });
 });
